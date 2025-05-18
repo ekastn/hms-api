@@ -18,9 +18,9 @@ type DoctorEntity struct {
 }
 
 type TimeSlot struct {
-	DayOfWeek int       `bson:"dayOfWeek"` // 0-6 (Sunday-Saturday)
-	StartTime time.Time `bson:"startTime"`
-	EndTime   time.Time `bson:"endTime"`
+	DayOfWeek int       `bson:"dayOfWeek" json:"dayOfWeek"` // 0-6 (Sunday-Saturday)
+	StartTime time.Time `bson:"startTime" json:"startTime"`
+	EndTime   time.Time `bson:"endTime" json:"endTime"`
 }
 
 type DoctorDTO struct {

@@ -63,7 +63,7 @@ func (a *App) mount() {
 	app := fiber.New()
 	app.Use(logger.New())
 	app.Use(cors.New(cors.Config{
-		AllowOrigins:     env.GetString("CORS_ALLOWED_ORIGIN", "http://localhost:5174"),
+		AllowOrigins:     env.GetString("CORS_ALLOWED_ORIGINS", "http://localhost:5174"),
 		AllowCredentials: true,
 		AllowMethods:     "GET,POST,PUT,DELETE",
 	}))

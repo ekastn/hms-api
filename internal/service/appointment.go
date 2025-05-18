@@ -12,9 +12,9 @@ import (
 )
 
 type AppointmentService struct {
-	appRepo      *repository.AppointmentRepository
-	patientRepo  *repository.PatientRepository
-	recordRepo   *repository.MedicalRecordRepository
+	appRepo     *repository.AppointmentRepository
+	patientRepo *repository.PatientRepository
+	recordRepo  *repository.MedicalRecordRepository
 }
 
 func NewAppointmentService(

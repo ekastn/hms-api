@@ -49,6 +49,20 @@ func (s *AppointmentService) Create(ctx context.Context, appointment *domain.App
 		return "", errors.New("doctor ID is required")
 	}
 
+	if appointment.Type == "" {
+		return "", errors.New("appointment type is required")
+	}
+
+	// Validate appointment type
+	switch appointment.Type {
+	case domain.AppointmentTypeCheckUp, domain.AppointmentTypeFollowUp,
+		domain.AppointmentTypeConsultation, domain.AppointmentTypeProcedure,
+		domain.AppointmentTypeEmergency:
+		// valid type
+	default:
+		return "", fmt.Errorf("invalid appointment type: %s", appointment.Type)
+	}
+
 	if appointment.DateTime.IsZero() {
 		return "", errors.New("appointment date and time is required")
 	}

@@ -15,10 +15,21 @@ const (
 	AppointmentStatusCancelled  AppointmentStatus = "Cancelled"
 )
 
+type AppointmentType string
+
+const (
+	AppointmentTypeCheckUp      AppointmentType = "check-up"
+	AppointmentTypeFollowUp     AppointmentType = "follow-up"
+	AppointmentTypeConsultation AppointmentType = "consultation"
+	AppointmentTypeProcedure    AppointmentType = "procedure"
+	AppointmentTypeEmergency    AppointmentType = "emergency"
+)
+
 type AppointmentEntity struct {
 	ID             primitive.ObjectID `bson:"_id,omitempty"`
 	PatientID      primitive.ObjectID `bson:"patientId"`
 	DoctorID       primitive.ObjectID `bson:"doctorId"`
+	Type           AppointmentType    `bson:"type"`
 	DateTime       time.Time          `bson:"dateTime"`
 	Duration       int                `bson:"duration"` // in minutes
 	Status         AppointmentStatus  `bson:"status"`
@@ -33,6 +44,7 @@ type AppointmentDTO struct {
 	ID             string            `json:"id"`
 	PatientID      string            `json:"patientId"`
 	DoctorID       string            `json:"doctorId"`
+	Type           AppointmentType   `json:"type"`
 	DateTime       time.Time         `json:"dateTime"`
 	Duration       int               `json:"duration"` // in minutes
 	Status         AppointmentStatus `json:"status"`
@@ -59,6 +71,7 @@ func (a AppointmentDTO) ToEntity() (AppointmentEntity, error) {
 		return AppointmentEntity{}, err
 	}
 
+	entity.Type = a.Type
 	entity.DateTime = a.DateTime
 	entity.Duration = a.Duration
 	entity.Status = a.Status
@@ -76,6 +89,7 @@ func (a AppointmentEntity) ToDTO() AppointmentDTO {
 		ID:             a.ID.Hex(),
 		PatientID:      a.PatientID.Hex(),
 		DoctorID:       a.DoctorID.Hex(),
+		Type:           a.Type,
 		DateTime:       a.DateTime,
 		Duration:       a.Duration,
 		Status:         a.Status,

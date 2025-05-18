@@ -55,6 +55,12 @@ type AppointmentDTO struct {
 	UpdatedAt      time.Time         `json:"updatedAt"`
 }
 
+type AppointmentDetailResponse struct {
+	Appointment AppointmentDTO    `json:"appointment"`
+	Patient     *PatientDTO       `json:"patient,omitempty"`
+	LastRecord  *MedicalRecordDTO `json:"lastRecord,omitempty"`
+}
+
 func (a AppointmentDTO) ToEntity() (AppointmentEntity, error) {
 	var entity AppointmentEntity
 	var err error
@@ -84,7 +90,7 @@ func (a AppointmentDTO) ToEntity() (AppointmentEntity, error) {
 	return entity, nil
 }
 
-func (a AppointmentEntity) ToDTO() AppointmentDTO {
+func (a *AppointmentEntity) ToDTO() AppointmentDTO {
 	return AppointmentDTO{
 		ID:             a.ID.Hex(),
 		PatientID:      a.PatientID.Hex(),
@@ -99,4 +105,22 @@ func (a AppointmentEntity) ToDTO() AppointmentDTO {
 		CreatedAt:      a.CreatedAt,
 		UpdatedAt:      a.UpdatedAt,
 	}
+}
+
+func (a *AppointmentEntity) ToDetailDTO(patient *PatientEntity, lastRecord *MedicalRecordEntity) *AppointmentDetailResponse {
+	detail := &AppointmentDetailResponse{
+		Appointment: a.ToDTO(),
+	}
+
+	if patient != nil {
+		patientDTO := patient.ToDTO()
+		detail.Patient = &patientDTO
+	}
+
+	if lastRecord != nil {
+		recordDTO := lastRecord.ToDTO()
+		detail.LastRecord = &recordDTO
+	}
+
+	return detail
 }

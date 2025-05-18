@@ -50,7 +50,27 @@ func (h *AppointmentHandler) GetByID(c *fiber.Ctx) error {
 		return utils.ResponseJSON(c, fiber.StatusNotFound, "Appointment not found", nil)
 	}
 
-	return utils.ResponseJSON(c, fiber.StatusOK, "Appointment details", appointment.ToDTO())
+	return utils.ResponseJSON(c, fiber.StatusOK, "Appointment retrieved successfully", appointment.ToDTO())
+}
+
+// GetAppointmentDetail returns detailed appointment information including patient and medical history
+func (h *AppointmentHandler) GetAppointmentDetail(c *fiber.Ctx) error {
+	id := c.Params("id")
+	if id == "" {
+		return utils.ResponseJSON(c, fiber.StatusBadRequest, "Appointment ID is required", nil)
+	}
+
+	detail, err := h.appointmentService.GetAppointmentDetail(c.Context(), id)
+	if err != nil {
+		log.Printf("Error getting appointment detail %s: %v", id, err)
+		return utils.ResponseJSON(c, fiber.StatusInternalServerError, "Failed to retrieve appointment details", nil)
+	}
+
+	if detail == nil {
+		return utils.ResponseJSON(c, fiber.StatusNotFound, "Appointment not found", nil)
+	}
+
+	return utils.ResponseJSON(c, fiber.StatusOK, "Appointment details retrieved successfully", detail)
 }
 
 func (h *AppointmentHandler) Create(c *fiber.Ctx) error {

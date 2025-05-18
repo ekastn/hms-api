@@ -12,12 +12,20 @@ import (
 )
 
 type AppointmentService struct {
-	appRepo *repository.AppointmentRepository
+	appRepo      *repository.AppointmentRepository
+	patientRepo  *repository.PatientRepository
+	recordRepo   *repository.MedicalRecordRepository
 }
 
-func NewAppointmentService(repo *repository.AppointmentRepository) *AppointmentService {
+func NewAppointmentService(
+	repo *repository.AppointmentRepository,
+	patientRepo *repository.PatientRepository,
+	recordRepo *repository.MedicalRecordRepository,
+) *AppointmentService {
 	return &AppointmentService{
-		appRepo: repo,
+		appRepo:     repo,
+		patientRepo: patientRepo,
+		recordRepo:  recordRepo,
 	}
 }
 
@@ -37,6 +45,42 @@ func (s *AppointmentService) GetByID(ctx context.Context, id string) (*domain.Ap
 	}
 
 	return appointment, nil
+}
+
+func (s *AppointmentService) GetAppointmentDetail(ctx context.Context, id string) (*domain.AppointmentDetailResponse, error) {
+	// Get the appointment
+	appointment, err := s.GetByID(ctx, id)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get appointment: %w", err)
+	}
+	if appointment == nil {
+		return nil, nil
+	}
+
+	// Get patient details
+	var patient *domain.PatientEntity
+	var lastRecord *domain.MedicalRecordEntity
+
+	if appointment.PatientID != primitive.NilObjectID {
+		// Get patient
+		patient, err = s.patientRepo.GetByID(ctx, appointment.PatientID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get patient: %w", err)
+		}
+
+		// Get the last medical record for the patient
+		records, err := s.recordRepo.GetByPatientID(ctx, appointment.PatientID)
+		if err != nil {
+			// Log the error but don't fail the request
+			fmt.Printf("Warning: failed to get medical records: %v\n", err)
+		} else if len(records) > 0 {
+			// Get the most recent record (assuming records are ordered by date descending)
+			lastRecord = records[0]
+		}
+	}
+
+	// Convert to detail DTO
+	return appointment.ToDetailDTO(patient, lastRecord), nil
 }
 
 func (s *AppointmentService) Create(ctx context.Context, appointment *domain.AppointmentEntity) (string, error) {

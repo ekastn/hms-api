@@ -8,6 +8,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type MedicalRecordRepository struct {
@@ -33,18 +34,7 @@ func (r *MedicalRecordRepository) Create(ctx context.Context, record *domain.Med
 }
 
 func (r *MedicalRecordRepository) FindAll(ctx context.Context) ([]*domain.MedicalRecordEntity, error) {
-	cursor, err := r.collection.Find(ctx, bson.M{})
-	if err != nil {
-		return nil, err
-	}
-	defer cursor.Close(ctx)
-
-	var records []*domain.MedicalRecordEntity
-	if err := cursor.All(ctx, &records); err != nil {
-		return nil, err
-	}
-
-	return records, nil
+	return r.findRecords(ctx, bson.M{})
 }
 
 func (r *MedicalRecordRepository) FindByID(ctx context.Context, id primitive.ObjectID) (*domain.MedicalRecordEntity, error) {
@@ -60,11 +50,12 @@ func (r *MedicalRecordRepository) FindByID(ctx context.Context, id primitive.Obj
 	return &record, nil
 }
 
-func (r *MedicalRecordRepository) findRecords(ctx context.Context, filter bson.M) ([]*domain.MedicalRecordEntity, error) {
-	cursor, err := r.collection.Find(ctx, filter)
+func (r *MedicalRecordRepository) findRecords(ctx context.Context, filter bson.M, opts ...*options.FindOptions) ([]*domain.MedicalRecordEntity, error) {
+	cursor, err := r.collection.Find(ctx, filter, opts...)
 	if err != nil {
 		return nil, err
 	}
+	defer cursor.Close(ctx)
 
 	var records []*domain.MedicalRecordEntity
 	if err := cursor.All(ctx, &records); err != nil {
@@ -75,16 +66,18 @@ func (r *MedicalRecordRepository) findRecords(ctx context.Context, filter bson.M
 }
 
 func (r *MedicalRecordRepository) GetByPatientID(ctx context.Context, patientID primitive.ObjectID) ([]*domain.MedicalRecordEntity, error) {
-	return r.findRecords(ctx, bson.M{"patientId": patientID})
+	opts := options.Find().SetSort(bson.D{{Key: "date", Value: -1}}) // Sort by date in descending order
+	return r.findRecords(ctx, bson.M{"patientId": patientID}, opts)
 }
 
 func (r *MedicalRecordRepository) GetByDateRange(ctx context.Context, start, end time.Time) ([]*domain.MedicalRecordEntity, error) {
-	return r.findRecords(ctx, bson.M{
+	filter := bson.M{
 		"date": bson.M{
 			"$gte": start,
 			"$lte": end,
 		},
-	})
+	}
+	return r.findRecords(ctx, filter, options.Find().SetSort(bson.D{{Key: "date", Value: -1}}))
 }
 
 func (r *MedicalRecordRepository) Update(ctx context.Context, id primitive.ObjectID, record *domain.MedicalRecordEntity) error {

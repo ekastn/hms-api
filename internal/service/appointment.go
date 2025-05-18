@@ -152,10 +152,10 @@ func (s *AppointmentService) Update(ctx context.Context, id string, appointment 
 	appointment.UpdatedAt = time.Now()
 
 	// If date/time or doctor is being changed, check for conflicts
-	if !appointment.DateTime.Equal(existingAppointment.DateTime) || 
-	   appointment.DoctorID != existingAppointment.DoctorID ||
-	   appointment.Duration != existingAppointment.Duration {
-		
+	if !appointment.DateTime.Equal(existingAppointment.DateTime) ||
+		appointment.DoctorID != existingAppointment.DoctorID ||
+		appointment.Duration != existingAppointment.Duration {
+
 		endTime := appointment.DateTime.Add(time.Duration(appointment.Duration) * time.Minute)
 		existingAppointments, err := s.appointmentRepo.GetByDoctorAndDateRange(
 			ctx,

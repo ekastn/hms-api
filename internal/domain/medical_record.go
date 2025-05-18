@@ -93,19 +93,19 @@ func (m *MedicalRecordEntity) ToDTO() MedicalRecordDTO {
 }
 
 type CreateMedicalRecordRequest struct {
-	PatientID   string    `json:"patientId" validate:"required"`
-	DoctorID    string    `json:"doctorId" validate:"required"`
-	RecordType  string    `json:"recordType" validate:"required"`
-	Description string    `json:"description" validate:"required"`
-	Diagnosis   string    `json:"diagnosis" validate:"required"`
-	Treatment   string    `json:"treatment" validate:"required"`
-	Notes       string    `json:"notes,omitempty"`
+	PatientID   string `json:"patientId" validate:"required"`
+	DoctorID    string `json:"doctorId" validate:"required"`
+	RecordType  string `json:"recordType" validate:"required"`
+	Description string `json:"description" validate:"required"`
+	Diagnosis   string `json:"diagnosis" validate:"required"`
+	Treatment   string `json:"treatment" validate:"required"`
+	Notes       string `json:"notes,omitempty"`
 }
 
 type UpdateMedicalRecordRequest struct {
-	RecordType  string    `json:"recordType,omitempty"`
-	Description string    `json:"description,omitempty"`
-	Diagnosis   string    `json:"diagnosis,omitempty"`
-	Treatment   string    `json:"treatment,omitempty"`
-	Notes       string    `json:"notes,omitempty"`
+	RecordType  string `json:"recordType,omitempty"`
+	Description string `json:"description,omitempty"`
+	Diagnosis   string `json:"diagnosis,omitempty"`
+	Treatment   string `json:"treatment,omitempty"`
+	Notes       string `json:"notes,omitempty"`
 }

@@ -61,7 +61,7 @@ func (h *PatientHandler) Create(c *fiber.Ctx) error {
 	}
 
 	patientDTO := patientEntity.ToDTO()
-    patientDTO.ID = id
+	patientDTO.ID = id
 
 	return utils.ResponseJSON(c, fiber.StatusCreated, "Patient created successfully", patientDTO)
 }

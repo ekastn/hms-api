@@ -10,9 +10,9 @@ type AppointmentStatus string
 
 const (
 	AppointmentStatusScheduled AppointmentStatus = "Scheduled"
-	AppointmentStatusConfirmed  AppointmentStatus = "Confirmed"
-	AppointmentStatusCompleted  AppointmentStatus = "Completed"
-	AppointmentStatusCancelled  AppointmentStatus = "Cancelled"
+	AppointmentStatusConfirmed AppointmentStatus = "Confirmed"
+	AppointmentStatusCompleted AppointmentStatus = "Completed"
+	AppointmentStatusCancelled AppointmentStatus = "Cancelled"
 )
 
 type AppointmentType string
@@ -60,7 +60,7 @@ func (a AppointmentDTO) ToEntity() (AppointmentEntity, error) {
 	var err error
 
 	entity.ID, _ = primitive.ObjectIDFromHex(a.ID)
-	
+
 	entity.PatientID, err = primitive.ObjectIDFromHex(a.PatientID)
 	if err != nil {
 		return AppointmentEntity{}, err

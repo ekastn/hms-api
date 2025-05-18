@@ -3,7 +3,6 @@ package handlers
 import (
 	"log"
 
-
 	"github.com/ekastn/hms-api/internal/domain"
 	"github.com/ekastn/hms-api/internal/service"
 	"github.com/ekastn/hms-api/internal/utils"

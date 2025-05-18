@@ -101,7 +101,6 @@ func (r *AppointmentRepository) GetByDoctorAndDateRange(
 	}
 	defer cur.Close(ctx)
 
-
 	var appointments []*domain.AppointmentEntity
 	for cur.Next(ctx) {
 		var appointment domain.AppointmentEntity

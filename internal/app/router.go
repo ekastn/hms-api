@@ -8,11 +8,20 @@ import (
 )
 
 func (a *App) setupRoutes() {
+	// Initialize repositories
 	patientRepo := repository.NewPatientRepository(a.db.Collection("patients"))
+	docRepo := repository.NewDoctorRepository(a.db.Collection("doctors"))
+	appointmentRepo := repository.NewAppointmentRepository(a.db.Collection("appointments"))
 
+	// Initialize services
 	patientService := service.NewPatientService(patientRepo)
+	docService := service.NewDoctorService(docRepo)
+	appointmentService := service.NewAppointmentService(appointmentRepo)
 
+	// Initialize handlers
 	patientHandler := handlers.NewPatientHandler(patientService)
+	docHandler := handlers.NewDoctorHandler(docService)
+	appointmentHandler := handlers.NewAppointmentHandler(appointmentService)
 
 	api := a.f.Group("/api")
 
@@ -22,6 +31,20 @@ func (a *App) setupRoutes() {
 	patients.Post("/", patientHandler.Create)
 	patients.Put("/:id", patientHandler.Update)
 	patients.Delete("/:id", patientHandler.Delete)
+
+	doctors := api.Group("/doctors")
+	doctors.Get("/", docHandler.GetAll)
+	doctors.Get("/:id", docHandler.GetByID)
+	doctors.Post("/", docHandler.Create)
+	doctors.Put("/:id", docHandler.Update)
+	doctors.Delete("/:id", docHandler.Delete)
+
+	appointments := api.Group("/appointments")
+	appointments.Get("/", appointmentHandler.GetAll)
+	appointments.Get("/:id", appointmentHandler.GetByID)
+	appointments.Post("/", appointmentHandler.Create)
+	appointments.Put("/:id", appointmentHandler.Update)
+	appointments.Delete("/:id", appointmentHandler.Delete)
 
 	// Health check route
 	api.Get("/", func(c *fiber.Ctx) error {

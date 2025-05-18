@@ -82,6 +82,74 @@ func (r *AppointmentRepository) Delete(ctx context.Context, id primitive.ObjectI
 	return err
 }
 
+func (r *AppointmentRepository) GetUpcomingAppointments(ctx context.Context, limit int) ([]*domain.UpcomingAppointment, error) {
+	now := time.Now()
+	end := now.Add(7 * 24 * time.Hour) // Next 7 days
+
+	pipeline := []bson.M{
+		{
+			"$match": bson.M{
+				"date": bson.M{
+					"$gte": now,
+					"$lte": end,
+				},
+				"status": bson.M{"$in": []string{"scheduled", "confirmed"}},
+			},
+		},
+		{"$sort": bson.M{"date": 1}},
+		{"$limit": limit},
+		{
+			"$lookup": bson.M{
+				"from":         "patients",
+				"localField":   "patient_id",
+				"foreignField": "_id",
+				"as":           "patient",
+			},
+		},
+		{"$unwind": "$patient"},
+		{
+			"$lookup": bson.M{
+				"from":         "doctors",
+				"localField":   "doctor_id",
+				"foreignField": "_id",
+				"as":           "doctor",
+			},
+		},
+		{"$unwind": "$doctor"},
+		{
+			"$project": bson.M{
+				"_id":         1,
+				"patientName": "$patient.name",
+				"doctorName":  "$doctor.name",
+				"date":        1,
+				"status":      1,
+			},
+		},
+	}
+
+	cursor, err := r.coll.Aggregate(ctx, pipeline)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var appointments []*domain.UpcomingAppointment
+	if err := cursor.All(ctx, &appointments); err != nil {
+		return nil, err
+	}
+
+	return appointments, nil
+}
+
+func (r *AppointmentRepository) Count(ctx context.Context) (int64, error) {
+	return r.coll.CountDocuments(ctx, bson.M{})
+}
+
+// GetAppointmentsCount is kept for backward compatibility
+func (r *AppointmentRepository) GetAppointmentsCount(ctx context.Context) (int64, error) {
+	return r.Count(ctx)
+}
+
 func (r *AppointmentRepository) GetByDoctorAndDateRange(
 	ctx context.Context,
 	doctorID primitive.ObjectID,

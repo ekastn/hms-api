@@ -32,10 +32,9 @@ func (h *MedicalRecordHandler) GetAll(c *fiber.Ctx) error {
 	return utils.ResponseJSON(c, fiber.StatusOK, "Medical records retrieved successfully", dtos)
 }
 
-func NewMedicalRecordHandler(recordService service.MedicalRecordService) *MedicalRecordHandler {
-	servicePtr := &recordService
+func NewMedicalRecordHandler(recordService *service.MedicalRecordService) *MedicalRecordHandler {
 	return &MedicalRecordHandler{
-		recordService: servicePtr,
+		recordService: recordService,
 	}
 }
 

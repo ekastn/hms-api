@@ -13,10 +13,10 @@ import (
 )
 
 type MedicalRecordService struct {
-	recordRepo repository.MedicalRecordRepository
+	recordRepo *repository.MedicalRecordRepository
 }
 
-func NewMedicalRecordService(recordRepo repository.MedicalRecordRepository) *MedicalRecordService {
+func NewMedicalRecordService(recordRepo *repository.MedicalRecordRepository) *MedicalRecordService {
 	return &MedicalRecordService{
 		recordRepo: recordRepo,
 	}
@@ -68,7 +68,7 @@ func (s *MedicalRecordService) GetByPatientID(ctx context.Context, patientID str
 		return nil, fmt.Errorf("invalid patient ID format: %w", err)
 	}
 
-	records, err := s.recordRepo.FindByPatientID(ctx, patientObjID)
+	records, err := s.recordRepo.GetByPatientID(ctx, patientObjID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get patient's medical records: %w", err)
 	}

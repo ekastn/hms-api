@@ -12,17 +12,17 @@ import (
 )
 
 type AppointmentService struct {
-	appointmentRepo *repository.AppointmentRepository
+	appRepo *repository.AppointmentRepository
 }
 
-func NewAppointmentService(appointmentRepo *repository.AppointmentRepository) *AppointmentService {
+func NewAppointmentService(repo *repository.AppointmentRepository) *AppointmentService {
 	return &AppointmentService{
-		appointmentRepo: appointmentRepo,
+		appRepo: repo,
 	}
 }
 
 func (s *AppointmentService) GetAll(ctx context.Context) ([]*domain.AppointmentEntity, error) {
-	return s.appointmentRepo.GetAll(ctx)
+	return s.appRepo.GetAll(ctx)
 }
 
 func (s *AppointmentService) GetByID(ctx context.Context, id string) (*domain.AppointmentEntity, error) {
@@ -31,7 +31,7 @@ func (s *AppointmentService) GetByID(ctx context.Context, id string) (*domain.Ap
 		return nil, fmt.Errorf("invalid ID format: %w", err)
 	}
 
-	appointment, err := s.appointmentRepo.GetByID(ctx, appointmentID)
+	appointment, err := s.appRepo.GetByID(ctx, appointmentID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get appointment: %w", err)
 	}
@@ -85,13 +85,12 @@ func (s *AppointmentService) Create(ctx context.Context, appointment *domain.App
 		return "", fmt.Errorf("invalid appointment status: %s", appointment.Status)
 	}
 
-	// Check for overlapping appointments
-	endTime := appointment.DateTime.Add(time.Duration(appointment.Duration) * time.Minute)
-	existingAppointments, err := s.appointmentRepo.GetByDoctorAndDateRange(
+	// Check for existing appointment at the same time
+	existing, err := s.appRepo.GetByDoctorAndDateRange(
 		ctx,
 		appointment.DoctorID,
 		appointment.DateTime,
-		endTime,
+		appointment.DateTime.Add(30*time.Minute),
 	)
 	if err != nil {
 		return "", fmt.Errorf("failed to check for existing appointments: %w", err)
@@ -99,7 +98,7 @@ func (s *AppointmentService) Create(ctx context.Context, appointment *domain.App
 
 	// Filter out cancelled appointments from the conflict check
 	var activeAppointments []*domain.AppointmentEntity
-	for _, a := range existingAppointments {
+	for _, a := range existing {
 		if a.Status != domain.AppointmentStatusCancelled {
 			activeAppointments = append(activeAppointments, a)
 		}
@@ -110,7 +109,7 @@ func (s *AppointmentService) Create(ctx context.Context, appointment *domain.App
 	}
 
 	// Create the appointment
-	id, err := s.appointmentRepo.Create(ctx, appointment)
+	id, err := s.appRepo.Create(ctx, appointment)
 	if err != nil {
 		return "", fmt.Errorf("failed to create appointment: %w", err)
 	}
@@ -125,7 +124,7 @@ func (s *AppointmentService) Update(ctx context.Context, id string, appointment 
 	}
 
 	// Get existing appointment to preserve created_at and other fields
-	existingAppointment, err := s.appointmentRepo.GetByID(ctx, appointmentID)
+	existingAppointment, err := s.appRepo.GetByID(ctx, appointmentID)
 	if err != nil {
 		return fmt.Errorf("failed to get appointment: %w", err)
 	}
@@ -157,7 +156,7 @@ func (s *AppointmentService) Update(ctx context.Context, id string, appointment 
 		appointment.Duration != existingAppointment.Duration {
 
 		endTime := appointment.DateTime.Add(time.Duration(appointment.Duration) * time.Minute)
-		existingAppointments, err := s.appointmentRepo.GetByDoctorAndDateRange(
+		existingAppointments, err := s.appRepo.GetByDoctorAndDateRange(
 			ctx,
 			appointment.DoctorID,
 			appointment.DateTime,
@@ -180,7 +179,7 @@ func (s *AppointmentService) Update(ctx context.Context, id string, appointment 
 		}
 	}
 
-	if err := s.appointmentRepo.Update(ctx, appointmentID, appointment); err != nil {
+	if err := s.appRepo.Update(ctx, appointmentID, appointment); err != nil {
 		return fmt.Errorf("failed to update appointment: %w", err)
 	}
 
@@ -194,7 +193,7 @@ func (s *AppointmentService) Delete(ctx context.Context, id string) error {
 	}
 
 	// Check if appointment exists
-	existingAppointment, err := s.appointmentRepo.GetByID(ctx, appointmentID)
+	existingAppointment, err := s.appRepo.GetByID(ctx, appointmentID)
 	if err != nil {
 		return fmt.Errorf("failed to get appointment: %w", err)
 	}
@@ -210,7 +209,7 @@ func (s *AppointmentService) Delete(ctx context.Context, id string) error {
 
 	// Instead of deleting, we'll mark it as cancelled
 	existingAppointment.Status = domain.AppointmentStatusCancelled
-	err = s.appointmentRepo.Update(ctx, appointmentID, existingAppointment)
+	err = s.appRepo.Update(ctx, appointmentID, existingAppointment)
 	if err != nil {
 		return fmt.Errorf("failed to cancel appointment: %w", err)
 	}

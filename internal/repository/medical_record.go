@@ -74,7 +74,7 @@ func (r *MedicalRecordRepository) findRecords(ctx context.Context, filter bson.M
 	return records, nil
 }
 
-func (r *MedicalRecordRepository) FindByPatientID(ctx context.Context, patientID primitive.ObjectID) ([]*domain.MedicalRecordEntity, error) {
+func (r *MedicalRecordRepository) GetByPatientID(ctx context.Context, patientID primitive.ObjectID) ([]*domain.MedicalRecordEntity, error) {
 	return r.findRecords(ctx, bson.M{"patientId": patientID})
 }
 
@@ -101,4 +101,8 @@ func (r *MedicalRecordRepository) Update(ctx context.Context, id primitive.Objec
 func (r *MedicalRecordRepository) Delete(ctx context.Context, id primitive.ObjectID) error {
 	_, err := r.collection.DeleteOne(ctx, bson.M{"_id": id})
 	return err
+}
+
+func (r *MedicalRecordRepository) Count(ctx context.Context) (int64, error) {
+	return r.collection.CountDocuments(ctx, bson.M{})
 }

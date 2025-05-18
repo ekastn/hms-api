@@ -19,14 +19,25 @@ func (a *App) setupRoutes() {
 	docService := service.NewDoctorService(docRepo)
 	appointmentService := service.NewAppointmentService(appointmentRepo)
 	medicalRecordService := service.NewMedicalRecordService(medicalRecordRepo)
+	dashboardService := service.NewDashboardService(
+		patientRepo,
+		docRepo,
+		appointmentRepo,
+		medicalRecordRepo,
+	)
 
 	// Initialize handlers
 	patientHandler := handlers.NewPatientHandler(patientService)
 	docHandler := handlers.NewDoctorHandler(docService)
 	appointmentHandler := handlers.NewAppointmentHandler(appointmentService)
-	medicalRecordHandler := handlers.NewMedicalRecordHandler(*medicalRecordService)
+	medicalRecordHandler := handlers.NewMedicalRecordHandler(medicalRecordService)
+	dashboardHandler := handlers.NewDashboardHandler(dashboardService)
 
 	api := a.f.Group("/api")
+
+	// Dashboard routes
+	dashboard := api.Group("/dashboard")
+	dashboard.Get("/", dashboardHandler.GetDashboardData)
 
 	patients := api.Group("/patients")
 	patients.Get("/", patientHandler.GetAll)

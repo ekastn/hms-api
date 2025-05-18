@@ -17,6 +17,45 @@ func NewDoctorRepository(coll *mongo.Collection) *DoctorRepository {
 	return &DoctorRepository{coll}
 }
 
+func (r *DoctorRepository) GetByEmail(ctx context.Context, email string) (*domain.DoctorEntity, error) {
+	var doctor domain.DoctorEntity
+	err := r.coll.FindOne(ctx, bson.M{"email": email}).Decode(&doctor)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	return &doctor, nil
+}
+
+func (r *DoctorRepository) GetByPhone(ctx context.Context, phone string) (*domain.DoctorEntity, error) {
+	var doctor domain.DoctorEntity
+	err := r.coll.FindOne(ctx, bson.M{"phone": phone}).Decode(&doctor)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	return &doctor, nil
+}
+
+func (r *DoctorRepository) GetByName(ctx context.Context, name string) (*domain.DoctorEntity, error) {
+	var doctor domain.DoctorEntity
+	err := r.coll.FindOne(ctx, bson.M{"name": name}).Decode(&doctor)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	return &doctor, nil
+}
+
 func (r *DoctorRepository) Create(ctx context.Context, doctor *domain.DoctorEntity) (primitive.ObjectID, error) {
 	res, err := r.coll.InsertOne(ctx, doctor)
 	return res.InsertedID.(primitive.ObjectID), err
@@ -60,4 +99,8 @@ func (r *DoctorRepository) Update(ctx context.Context, id primitive.ObjectID, do
 func (r *DoctorRepository) Delete(ctx context.Context, id primitive.ObjectID) error {
 	_, err := r.coll.DeleteOne(ctx, bson.M{"_id": id})
 	return err
+}
+
+func (r *DoctorRepository) Count(ctx context.Context) (int64, error) {
+	return r.coll.CountDocuments(ctx, bson.M{})
 }

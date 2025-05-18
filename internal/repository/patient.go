@@ -31,6 +31,46 @@ func (r *PatientRepository) GetByID(ctx context.Context, id primitive.ObjectID) 
 	return &patient, nil
 }
 
+func (r *PatientRepository) GetByEmail(ctx context.Context, email string) (*domain.PatientEntity, error) {
+	var patient domain.PatientEntity
+	err := r.coll.FindOne(ctx, bson.M{"email": email}).Decode(&patient)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &patient, nil
+}
+
+func (r *PatientRepository) GetByPhone(ctx context.Context, phone string) (*domain.PatientEntity, error) {
+	var patient domain.PatientEntity
+	err := r.coll.FindOne(ctx, bson.M{"phone": phone}).Decode(&patient)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &patient, nil
+}
+
+func (r *PatientRepository) GetByName(ctx context.Context, name string) (*domain.PatientEntity, error) {
+	var patient domain.PatientEntity
+	err := r.coll.FindOne(ctx, bson.M{"name": name}).Decode(&patient)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &patient, nil
+}
+
+func (r *PatientRepository) Count(ctx context.Context) (int64, error) {
+	return r.coll.CountDocuments(ctx, bson.M{})
+}
+
 func (r *PatientRepository) GetAll(ctx context.Context) ([]*domain.PatientEntity, error) {
 	cur, err := r.coll.Find(ctx, bson.D{})
 	if err != nil {

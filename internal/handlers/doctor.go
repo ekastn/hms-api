@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"log"
+	"time"
 
 	"github.com/ekastn/hms-api/internal/domain"
 	"github.com/ekastn/hms-api/internal/service"
@@ -48,34 +49,63 @@ func (h *DoctorHandler) GetByID(c *fiber.Ctx) error {
 }
 
 func (h *DoctorHandler) Create(c *fiber.Ctx) error {
-	var body domain.DoctorDTO
-	if err := c.BodyParser(&body); err != nil {
+	var req domain.CreateDoctorRequet
+	if err := c.BodyParser(&req); err != nil {
 		log.Println(err)
 		return utils.ResponseJSON(c, fiber.StatusBadRequest, err.Error(), nil)
 	}
 
-	docEntity := body.ToEntity()
+	// Convert request to entity
+	docEntity := domain.DoctorEntity{
+		Name:         req.Name,
+		Specialty:    req.Specialty,
+		Phone:        req.Phone,
+		Email:        req.Email,
+		Availability: []domain.TimeSlot{},
+		CreatedAt:    time.Now(),
+		UpdatedAt:    time.Now(),
+	}
+
 	id, err := h.docService.Create(c.Context(), &docEntity)
 	if err != nil {
 		return utils.ResponseJSON(c, fiber.StatusInternalServerError, err.Error(), nil)
 	}
 
-	docDTO := docEntity.ToDTO()
-	docDTO.ID = id
+	// Fetch the created doctor to return complete data
+	createdDoc, err := h.docService.GetByID(c.Context(), id)
+	if err != nil {
+		return utils.ResponseJSON(c, fiber.StatusInternalServerError, "Doctor created but failed to fetch data", nil)
+	}
 
-	return utils.ResponseJSON(c, fiber.StatusCreated, "Doctor created successfully", docDTO)
+	return utils.ResponseJSON(c, fiber.StatusCreated, "Doctor created successfully", createdDoc.ToDTO())
 }
 
 func (h *DoctorHandler) Update(c *fiber.Ctx) error {
 	id := c.Params("id")
 
-	var body domain.DoctorDTO
-	if err := c.BodyParser(&body); err != nil {
+	var req domain.UpdateDoctorRequet
+	if err := c.BodyParser(&req); err != nil {
 		return utils.ResponseJSON(c, fiber.StatusBadRequest, err.Error(), nil)
 	}
 
-	docEntity := body.ToEntity()
-	err := h.docService.Update(c.Context(), id, &docEntity)
+	// Get existing doctor to preserve some fields
+	existingDoc, err := h.docService.GetByID(c.Context(), id)
+	if err != nil {
+		return utils.ResponseJSON(c, fiber.StatusInternalServerError, err.Error(), nil)
+	}
+
+	// Update only the allowed fields
+	docEntity := domain.DoctorEntity{
+		Name:         req.Name,
+		Specialty:    req.Specialty,
+		Phone:        req.Phone,
+		Email:        req.Email,
+		Availability: existingDoc.Availability, // Preserve existing availability
+		CreatedAt:    existingDoc.CreatedAt,    // Preserve created at
+		UpdatedAt:    time.Now(),               // Update updated at
+	}
+
+	err = h.docService.Update(c.Context(), id, &docEntity)
 	if err != nil {
 		return utils.ResponseJSON(c, fiber.StatusInternalServerError, err.Error(), nil)
 	}

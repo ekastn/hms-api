@@ -48,6 +48,23 @@ func (h *PatientHandler) GetByID(c *fiber.Ctx) error {
 	return utils.ResponseJSON(c, fiber.StatusOK, "Patient details", patient.ToDTO())
 }
 
+// GetPatientDetail returns comprehensive patient information including recent appointments and medical history
+func (h *PatientHandler) GetPatientDetail(c *fiber.Ctx) error {
+	id := c.Params("id")
+
+	// Get patient detail with related data
+	detail, err := h.patientService.GetPatientDetail(c.Context(), id)
+	if err != nil {
+		return utils.ResponseJSON(c, fiber.StatusInternalServerError, err.Error(), nil)
+	}
+
+	if detail == nil {
+		return utils.ResponseJSON(c, fiber.StatusNotFound, "Patient not found", nil)
+	}
+
+	return utils.ResponseJSON(c, fiber.StatusOK, "Patient details with appointments and medical history", detail)
+}
+
 func (h *PatientHandler) Create(c *fiber.Ctx) error {
 	var req domain.CreatePatientRequest
 	if err := c.BodyParser(&req); err != nil {

@@ -12,17 +12,25 @@ import (
 )
 
 type PatientService struct {
-	patientRepo *repository.PatientRepository
+	docRepo    *repository.PatientRepository
+	apptRepo   *repository.AppointmentRepository
+	recordRepo *repository.MedicalRecordRepository
 }
 
-func NewPatientService(patientRepo *repository.PatientRepository) *PatientService {
+func NewPatientService(
+	repo *repository.PatientRepository,
+	apptRepo *repository.AppointmentRepository,
+	recordRepo *repository.MedicalRecordRepository,
+) *PatientService {
 	return &PatientService{
-		patientRepo: patientRepo,
+		docRepo:    repo,
+		apptRepo:   apptRepo,
+		recordRepo: recordRepo,
 	}
 }
 
 func (s *PatientService) GetAll(ctx context.Context) ([]*domain.PatientEntity, error) {
-	return s.patientRepo.GetAll(ctx)
+	return s.docRepo.GetAll(ctx)
 }
 
 func (s *PatientService) GetByID(ctx context.Context, id string) (*domain.PatientEntity, error) {
@@ -31,12 +39,52 @@ func (s *PatientService) GetByID(ctx context.Context, id string) (*domain.Patien
 		return nil, fmt.Errorf("invalid ID format: %w", err)
 	}
 
-	patient, err := s.patientRepo.GetByID(ctx, patientID)
+	patient, err := s.docRepo.GetByID(ctx, patientID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get patient: %w", err)
 	}
 
 	return patient, nil
+}
+
+func (s *PatientService) GetPatientDetail(ctx context.Context, id string) (*domain.PatientDetailResponse, error) {
+	// Get patient
+	patient, err := s.GetByID(ctx, id)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get patient: %w", err)
+	}
+
+	// Get recent appointments (last 10)
+	appointments, err := s.apptRepo.GetByPatientID(ctx, patient.ID)
+	if len(appointments) > 10 {
+		appointments = appointments[:10] // Limit to 10 most recent
+	}
+	if err != nil {
+		return nil, fmt.Errorf("failed to get patient appointments: %w", err)
+	}
+
+	// Get medical history
+	medicalRecords, err := s.recordRepo.GetByPatientID(ctx, patient.ID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get patient medical records: %w", err)
+	}
+
+	// Convert to DTOs
+	var appointmentDTOs []domain.AppointmentDTO
+	for _, appt := range appointments {
+		appointmentDTOs = append(appointmentDTOs, appt.ToDTO())
+	}
+
+	var recordDTOs []domain.MedicalRecordDTO
+	for _, record := range medicalRecords {
+		recordDTOs = append(recordDTOs, record.ToDTO())
+	}
+
+	return &domain.PatientDetailResponse{
+		Patient:            patient.ToDTO(),
+		RecentAppointments: appointmentDTOs,
+		MedicalHistory:     recordDTOs,
+	}, nil
 }
 
 func (s *PatientService) Create(ctx context.Context, patient *domain.PatientEntity) (string, error) {
@@ -45,38 +93,15 @@ func (s *PatientService) Create(ctx context.Context, patient *domain.PatientEnti
 		return "", errors.New("name, phone, and email are required")
 	}
 
-	// Check if name already exists
-	existingByName, err := s.patientRepo.GetByName(ctx, patient.Name)
-	if err != nil {
-		return "", fmt.Errorf("error checking name: %w", err)
-	}
-	if existingByName != nil {
-		return "", errors.New("patient with this name already exists")
-	}
+	// Set timestamps
+	now := time.Now()
+	patient.CreatedAt = now
+	patient.UpdatedAt = now
+	patient.LastVisit = now
+	patient.ID = primitive.NewObjectID()
 
-	// Check if email already exists
-	existingByEmail, err := s.patientRepo.GetByEmail(ctx, patient.Email)
-	if err != nil {
-		return "", fmt.Errorf("error checking email: %w", err)
-	}
-	if existingByEmail != nil {
-		return "", errors.New("email already exists")
-	}
-
-	// Check if phone already exists
-	existingByPhone, err := s.patientRepo.GetByPhone(ctx, patient.Phone)
-	if err != nil {
-		return "", fmt.Errorf("error checking phone: %w", err)
-	}
-	if existingByPhone != nil {
-		return "", errors.New("phone number already exists")
-	}
-
-	// Set last visit timestamp
-	patient.LastVisit = time.Now()
-
-	// Insert patient into database
-	id, err := s.patientRepo.Create(ctx, patient)
+	// Create patient in repository
+	id, err := s.docRepo.Create(ctx, patient)
 	if err != nil {
 		return "", fmt.Errorf("failed to create patient: %w", err)
 	}
@@ -89,63 +114,32 @@ func (s *PatientService) Update(ctx context.Context, id string, patient *domain.
 		return errors.New("patient ID is required")
 	}
 
+	// Validate required fields
 	if patient.Name == "" || patient.Phone == "" || patient.Email == "" {
 		return errors.New("name, phone, and email are required")
 	}
 
-	// Convert ID to ObjectID
 	patientID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return fmt.Errorf("invalid ID format: %w", err)
 	}
 
-	// Get existing patient
-	existing, err := s.patientRepo.GetByID(ctx, patientID)
+	// Get existing patient to preserve timestamps
+	existingPatient, err := s.docRepo.GetByID(ctx, patientID)
 	if err != nil {
-		return fmt.Errorf("error getting patient: %w", err)
+		return fmt.Errorf("failed to get existing patient: %w", err)
 	}
-	if existing == nil {
+	if existingPatient == nil {
 		return errors.New("patient not found")
 	}
 
-	// Check if name is being changed and already exists
-	if existing.Name != patient.Name {
-		existingByName, err := s.patientRepo.GetByName(ctx, patient.Name)
-		if err != nil {
-			return fmt.Errorf("error checking name: %w", err)
-		}
-		if existingByName != nil {
-			return errors.New("patient with this name already exists")
-		}
-	}
+	// Preserve created_at and set updated_at
+	patient.CreatedAt = existingPatient.CreatedAt
+	patient.UpdatedAt = time.Now()
+	patient.ID = patientID
 
-	// Check if email is being changed and already exists
-	if existing.Email != patient.Email {
-		existingByEmail, err := s.patientRepo.GetByEmail(ctx, patient.Email)
-		if err != nil {
-			return fmt.Errorf("error checking email: %w", err)
-		}
-		if existingByEmail != nil {
-			return errors.New("email already exists")
-		}
-	}
-
-	// Check if phone is being changed and already exists
-	if existing.Phone != patient.Phone {
-		existingByPhone, err := s.patientRepo.GetByPhone(ctx, patient.Phone)
-		if err != nil {
-			return fmt.Errorf("error checking phone: %w", err)
-		}
-		if existingByPhone != nil {
-			return errors.New("phone number already exists")
-		}
-	}
-
-	// Update last visit timestamp
-	patient.LastVisit = time.Now()
-
-	// Update patient in database
-	if err := s.patientRepo.Update(ctx, patientID, patient); err != nil {
+	// Update patient in repository
+	if err := s.docRepo.Update(ctx, patientID, patient); err != nil {
 		return fmt.Errorf("failed to update patient: %w", err)
 	}
 
@@ -158,16 +152,14 @@ func (s *PatientService) Delete(ctx context.Context, id string) error {
 		return fmt.Errorf("invalid ID format: %w", err)
 	}
 
-	patientFound, err := s.patientRepo.GetByID(ctx, patientID)
+	// Check if patient exists
+	_, err = s.docRepo.GetByID(ctx, patientID)
 	if err != nil {
 		return fmt.Errorf("failed to get patient: %w", err)
 	}
 
-	if patientFound == nil {
-		return fmt.Errorf("patient not found")
-	}
-
-	if err := s.patientRepo.Delete(ctx, patientID); err != nil {
+	// Delete patient from repository
+	if err := s.docRepo.Delete(ctx, patientID); err != nil {
 		return fmt.Errorf("failed to delete patient: %w", err)
 	}
 

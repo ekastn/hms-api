@@ -15,8 +15,16 @@ func (a *App) setupRoutes() {
 	medicalRecordRepo := repository.NewMedicalRecordRepository(a.db.Collection("medical_records"))
 
 	// Initialize services
-	patientService := service.NewPatientService(patientRepo)
-	docService := service.NewDoctorService(docRepo)
+	patientService := service.NewPatientService(
+		patientRepo,
+		appointmentRepo,
+		medicalRecordRepo,
+	)
+	docService := service.NewDoctorService(
+		docRepo,
+		appointmentRepo,
+		patientRepo,
+	)
 	appointmentService := service.NewAppointmentService(appointmentRepo)
 	medicalRecordService := service.NewMedicalRecordService(medicalRecordRepo)
 	dashboardService := service.NewDashboardService(
@@ -42,6 +50,7 @@ func (a *App) setupRoutes() {
 	patients := api.Group("/patients")
 	patients.Get("/", patientHandler.GetAll)
 	patients.Get("/:id", patientHandler.GetByID)
+	patients.Get("/:id/detail", patientHandler.GetPatientDetail) // New endpoint for detailed patient info
 	patients.Post("/", patientHandler.Create)
 	patients.Put("/:id", patientHandler.Update)
 	patients.Delete("/:id", patientHandler.Delete)
@@ -49,6 +58,7 @@ func (a *App) setupRoutes() {
 	doctors := api.Group("/doctors")
 	doctors.Get("/", docHandler.GetAll)
 	doctors.Get("/:id", docHandler.GetByID)
+	doctors.Get("/:id/detail", docHandler.GetDoctorDetail) // New endpoint for detailed doctor info
 	doctors.Post("/", docHandler.Create)
 	doctors.Put("/:id", docHandler.Update)
 	doctors.Delete("/:id", docHandler.Delete)

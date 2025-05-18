@@ -48,6 +48,22 @@ func (h *DoctorHandler) GetByID(c *fiber.Ctx) error {
 	return utils.ResponseJSON(c, fiber.StatusOK, "Doctor details", doc.ToDTO())
 }
 
+func (h *DoctorHandler) GetDoctorDetail(c *fiber.Ctx) error {
+	id := c.Params("id")
+
+	// Get doctor detail with related data
+	detail, err := h.docService.GetDoctorDetail(c.Context(), id)
+	if err != nil {
+		return utils.ResponseJSON(c, fiber.StatusInternalServerError, err.Error(), nil)
+	}
+
+	if detail == nil {
+		return utils.ResponseJSON(c, fiber.StatusNotFound, "Doctor not found", nil)
+	}
+
+	return utils.ResponseJSON(c, fiber.StatusOK, "Doctor details with recent patients", detail)
+}
+
 func (h *DoctorHandler) Create(c *fiber.Ctx) error {
 	var req domain.CreateDoctorRequet
 	if err := c.BodyParser(&req); err != nil {

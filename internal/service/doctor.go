@@ -11,31 +11,70 @@ import (
 )
 
 type DoctorService struct {
-	docRepo *repository.DoctorRepository
+	doctorRepo      *repository.DoctorRepository
+	appointmentRepo *repository.AppointmentRepository
+	patientRepo     *repository.PatientRepository
 }
 
-func NewDoctorService(docRepo *repository.DoctorRepository) *DoctorService {
+func NewDoctorService(
+	repo *repository.DoctorRepository,
+	appointmentRepo *repository.AppointmentRepository,
+	patientRepo *repository.PatientRepository,
+) *DoctorService {
 	return &DoctorService{
-		docRepo: docRepo,
+		doctorRepo:      repo,
+		appointmentRepo: appointmentRepo,
+		patientRepo:     patientRepo,
 	}
 }
 
 func (s *DoctorService) GetAll(ctx context.Context) ([]*domain.DoctorEntity, error) {
-	return s.docRepo.GetAll(ctx)
+	return s.doctorRepo.GetAll(ctx)
 }
 
 func (s *DoctorService) GetByID(ctx context.Context, id string) (*domain.DoctorEntity, error) {
-	docID, err := primitive.ObjectIDFromHex(id)
+	doctorID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return nil, fmt.Errorf("invalid ID format: %w", err)
 	}
 
-	doctor, err := s.docRepo.GetByID(ctx, docID)
+	return s.doctorRepo.GetByID(ctx, doctorID)
+}
+
+func (s *DoctorService) GetDoctorDetail(ctx context.Context, id string) (*domain.DoctorDetailResponse, error) {
+	// Get the doctor
+	doctorID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return nil, fmt.Errorf("invalid ID format: %w", err)
+	}
+
+	doctor, err := s.doctorRepo.GetByID(ctx, doctorID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get doctor: %w", err)
 	}
+	if doctor == nil {
+		return nil, nil
+	}
 
-	return doctor, nil
+	// Get recent patient IDs
+	patientIDs, err := s.appointmentRepo.GetRecentPatientsByDoctorID(ctx, doctorID, 10) // Last 10 patients
+	if err != nil {
+		return nil, fmt.Errorf("failed to get recent patients: %w", err)
+	}
+
+	// Get patient details
+	recentPatients := make([]*domain.PatientEntity, 0, len(patientIDs))
+	for _, pid := range patientIDs {
+		patient, err := s.patientRepo.GetByID(ctx, pid)
+		if err != nil {
+			// Log the error but continue with other patients
+			continue
+		}
+		recentPatients = append(recentPatients, patient)
+	}
+
+	// Convert to detail DTO
+	return doctor.ToDetailDTO(recentPatients), nil
 }
 
 func (s *DoctorService) Create(ctx context.Context, doctor *domain.DoctorEntity) (string, error) {
@@ -45,7 +84,7 @@ func (s *DoctorService) Create(ctx context.Context, doctor *domain.DoctorEntity)
 	}
 
 	// Check if name already exists
-	existingByName, err := s.docRepo.GetByName(ctx, doctor.Name)
+	existingByName, err := s.doctorRepo.GetByName(ctx, doctor.Name)
 	if err != nil {
 		return "", fmt.Errorf("error checking name: %w", err)
 	}
@@ -54,7 +93,7 @@ func (s *DoctorService) Create(ctx context.Context, doctor *domain.DoctorEntity)
 	}
 
 	// Check if email already exists
-	existingByEmail, err := s.docRepo.GetByEmail(ctx, doctor.Email)
+	existingByEmail, err := s.doctorRepo.GetByEmail(ctx, doctor.Email)
 	if err != nil {
 		return "", fmt.Errorf("error checking email: %w", err)
 	}
@@ -63,7 +102,7 @@ func (s *DoctorService) Create(ctx context.Context, doctor *domain.DoctorEntity)
 	}
 
 	// Check if phone already exists
-	existingByPhone, err := s.docRepo.GetByPhone(ctx, doctor.Phone)
+	existingByPhone, err := s.doctorRepo.GetByPhone(ctx, doctor.Phone)
 	if err != nil {
 		return "", fmt.Errorf("error checking phone: %w", err)
 	}
@@ -77,7 +116,7 @@ func (s *DoctorService) Create(ctx context.Context, doctor *domain.DoctorEntity)
 	doctor.UpdatedAt = now
 
 	// Create doctor
-	id, err := s.docRepo.Create(ctx, doctor)
+	id, err := s.doctorRepo.Create(ctx, doctor)
 	if err != nil {
 		return "", fmt.Errorf("failed to create doctor: %w", err)
 	}
@@ -101,7 +140,7 @@ func (s *DoctorService) Update(ctx context.Context, id string, doctor *domain.Do
 	}
 
 	// Get existing doctor
-	existing, err := s.docRepo.GetByID(ctx, docID)
+	existing, err := s.doctorRepo.GetByID(ctx, docID)
 	if err != nil {
 		return fmt.Errorf("failed to get doctor: %w", err)
 	}
@@ -111,7 +150,7 @@ func (s *DoctorService) Update(ctx context.Context, id string, doctor *domain.Do
 
 	// Check if name is being changed and already exists
 	if existing.Name != doctor.Name {
-		existingByName, err := s.docRepo.GetByName(ctx, doctor.Name)
+		existingByName, err := s.doctorRepo.GetByName(ctx, doctor.Name)
 		if err != nil {
 			return fmt.Errorf("error checking name: %w", err)
 		}
@@ -122,7 +161,7 @@ func (s *DoctorService) Update(ctx context.Context, id string, doctor *domain.Do
 
 	// Check if email is being changed and already exists
 	if existing.Email != doctor.Email {
-		existingByEmail, err := s.docRepo.GetByEmail(ctx, doctor.Email)
+		existingByEmail, err := s.doctorRepo.GetByEmail(ctx, doctor.Email)
 		if err != nil {
 			return fmt.Errorf("error checking email: %w", err)
 		}
@@ -133,7 +172,7 @@ func (s *DoctorService) Update(ctx context.Context, id string, doctor *domain.Do
 
 	// Check if phone is being changed and already exists
 	if existing.Phone != doctor.Phone {
-		existingByPhone, err := s.docRepo.GetByPhone(ctx, doctor.Phone)
+		existingByPhone, err := s.doctorRepo.GetByPhone(ctx, doctor.Phone)
 		if err != nil {
 			return fmt.Errorf("error checking phone: %w", err)
 		}
@@ -146,7 +185,7 @@ func (s *DoctorService) Update(ctx context.Context, id string, doctor *domain.Do
 	doctor.CreatedAt = existing.CreatedAt
 	doctor.UpdatedAt = time.Now()
 
-	if err := s.docRepo.Update(ctx, docID, doctor); err != nil {
+	if err := s.doctorRepo.Update(ctx, docID, doctor); err != nil {
 		return fmt.Errorf("failed to update doctor: %w", err)
 	}
 
@@ -159,7 +198,7 @@ func (s *DoctorService) Delete(ctx context.Context, id string) error {
 		return fmt.Errorf("invalid ID format: %w", err)
 	}
 
-	existingDoc, err := s.docRepo.GetByID(ctx, docID)
+	existingDoc, err := s.doctorRepo.GetByID(ctx, docID)
 	if err != nil {
 		return fmt.Errorf("failed to get doctor: %w", err)
 	}
@@ -168,7 +207,7 @@ func (s *DoctorService) Delete(ctx context.Context, id string) error {
 		return fmt.Errorf("doctor not found")
 	}
 
-	if err := s.docRepo.Delete(ctx, docID); err != nil {
+	if err := s.doctorRepo.Delete(ctx, docID); err != nil {
 		return fmt.Errorf("failed to delete doctor: %w", err)
 	}
 

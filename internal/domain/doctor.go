@@ -74,3 +74,26 @@ type UpdateDoctorRequet struct {
 	Phone     string `json:"phone" validate:"required"`
 	Email     string `json:"email" validate:"required"`
 }
+
+type DoctorDetailResponse struct {
+	Doctor         *DoctorDTO   `json:"doctor"`
+	RecentPatients []PatientDTO `json:"recentPatients,omitempty"`
+}
+
+func (d *DoctorEntity) ToDetailDTO(recentPatients []*PatientEntity) *DoctorDetailResponse {
+	dto := d.ToDTO()
+	detail := &DoctorDetailResponse{
+		Doctor: &dto,
+	}
+
+	if len(recentPatients) > 0 {
+		detail.RecentPatients = make([]PatientDTO, 0, len(recentPatients))
+		for _, p := range recentPatients {
+			if p != nil {
+				detail.RecentPatients = append(detail.RecentPatients, p.ToDTO())
+			}
+		}
+	}
+
+	return detail
+}

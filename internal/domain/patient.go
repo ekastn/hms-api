@@ -15,6 +15,8 @@ type PatientEntity struct {
 	Email     string             `bson:"email"`
 	Address   string             `bson:"address"`
 	LastVisit time.Time          `bson:"lastVisit"`
+	CreatedAt time.Time          `bson:"createdAt"`
+	UpdatedAt time.Time          `bson:"updatedAt"`
 }
 
 type PatientDTO struct {
@@ -69,4 +71,10 @@ type UpdatePatientRequest struct {
 	Phone   string `json:"phone" validate:"required"`
 	Email   string `json:"email" validate:"required"`
 	Address string `json:"address" validate:"required"`
+}
+
+type PatientDetailResponse struct {
+	Patient            PatientDTO         `json:"patient"`
+	RecentAppointments []AppointmentDTO   `json:"recentAppointments"`
+	MedicalHistory     []MedicalRecordDTO `json:"medicalHistory"`
 }

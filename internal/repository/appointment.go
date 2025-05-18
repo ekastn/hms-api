@@ -8,6 +8,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type AppointmentRepository struct {
@@ -157,7 +158,7 @@ func (r *AppointmentRepository) GetByDoctorAndDateRange(
 ) ([]*domain.AppointmentEntity, error) {
 	filter := bson.M{
 		"doctorId": doctorID,
-		"dateTime": bson.M{
+		"startTime": bson.M{
 			"$gte": start,
 			"$lt":  end,
 		},
@@ -170,17 +171,76 @@ func (r *AppointmentRepository) GetByDoctorAndDateRange(
 	defer cur.Close(ctx)
 
 	var appointments []*domain.AppointmentEntity
-	for cur.Next(ctx) {
-		var appointment domain.AppointmentEntity
-		if err := cur.Decode(&appointment); err != nil {
-			return nil, err
-		}
-		appointments = append(appointments, &appointment)
-	}
-
-	if err := cur.Err(); err != nil {
+	if err := cur.All(ctx, &appointments); err != nil {
 		return nil, err
 	}
 
 	return appointments, nil
+}
+
+// GetByPatientID retrieves appointments for a specific patient
+func (r *AppointmentRepository) GetByPatientID(ctx context.Context, patientID primitive.ObjectID) ([]*domain.AppointmentEntity, error) {
+	filter := bson.M{"patientId": patientID}
+	opts := options.Find().SetSort(bson.D{{Key: "startTime", Value: -1}})
+
+	cur, err := r.coll.Find(ctx, filter, opts)
+	if err != nil {
+		return nil, err
+	}
+	defer cur.Close(ctx)
+
+	var appointments []*domain.AppointmentEntity
+	if err := cur.All(ctx, &appointments); err != nil {
+		return nil, err
+	}
+
+	return appointments, nil
+}
+
+// GetRecentPatientsByDoctorID returns a list of recent patients for a doctor
+func (r *AppointmentRepository) GetRecentPatientsByDoctorID(ctx context.Context, doctorID primitive.ObjectID, limit int) ([]primitive.ObjectID, error) {
+	pipeline := []bson.M{
+		{
+			"$match": bson.M{
+				"doctorId": doctorID,
+			},
+		},
+		{
+			"$sort": bson.M{"startTime": -1},
+		},
+		{
+			"$group": bson.M{
+				"_id":       "$patientId",
+				"lastVisit": bson.M{"$first": "$startTime"},
+			},
+		},
+		{
+			"$sort": bson.M{"lastVisit": -1},
+		},
+	}
+
+	if limit > 0 {
+		pipeline = append(pipeline, bson.M{"$limit": limit})
+	}
+
+	cursor, err := r.coll.Aggregate(ctx, pipeline)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var results []struct {
+		ID primitive.ObjectID `bson:"_id"`
+	}
+
+	if err := cursor.All(ctx, &results); err != nil {
+		return nil, err
+	}
+
+	patientIDs := make([]primitive.ObjectID, len(results))
+	for i, result := range results {
+		patientIDs[i] = result.ID
+	}
+
+	return patientIDs, nil
 }

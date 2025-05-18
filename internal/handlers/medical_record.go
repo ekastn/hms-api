@@ -15,7 +15,6 @@ type MedicalRecordHandler struct {
 	recordService *service.MedicalRecordService
 }
 
-// GetAll handles GET /api/records
 func (h *MedicalRecordHandler) GetAll(c *fiber.Ctx) error {
 	records, err := h.recordService.GetAll(c.Context())
 	if err != nil {

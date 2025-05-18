@@ -12,16 +12,19 @@ func (a *App) setupRoutes() {
 	patientRepo := repository.NewPatientRepository(a.db.Collection("patients"))
 	docRepo := repository.NewDoctorRepository(a.db.Collection("doctors"))
 	appointmentRepo := repository.NewAppointmentRepository(a.db.Collection("appointments"))
+	medicalRecordRepo := repository.NewMedicalRecordRepository(a.db.Collection("medical_records"))
 
 	// Initialize services
 	patientService := service.NewPatientService(patientRepo)
 	docService := service.NewDoctorService(docRepo)
 	appointmentService := service.NewAppointmentService(appointmentRepo)
+	medicalRecordService := service.NewMedicalRecordService(medicalRecordRepo)
 
 	// Initialize handlers
 	patientHandler := handlers.NewPatientHandler(patientService)
 	docHandler := handlers.NewDoctorHandler(docService)
 	appointmentHandler := handlers.NewAppointmentHandler(appointmentService)
+	medicalRecordHandler := handlers.NewMedicalRecordHandler(*medicalRecordService)
 
 	api := a.f.Group("/api")
 
@@ -45,6 +48,13 @@ func (a *App) setupRoutes() {
 	appointments.Post("/", appointmentHandler.Create)
 	appointments.Put("/:id", appointmentHandler.Update)
 	appointments.Delete("/:id", appointmentHandler.Delete)
+
+	records := api.Group("/records")
+	records.Get("/", medicalRecordHandler.GetAll)
+	records.Get("/:id", medicalRecordHandler.GetByID)
+	records.Post("/", medicalRecordHandler.Create)
+	records.Put("/:id", medicalRecordHandler.Update)
+	records.Delete("/:id", medicalRecordHandler.Delete)
 
 	// Health check route
 	api.Get("/", func(c *fiber.Ctx) error {

@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	
+	"log"
 	"time"
 
 	"github.com/ekastn/hms-api/internal/domain"
@@ -66,8 +66,14 @@ func (h *DoctorHandler) GetDoctorDetail(c *fiber.Ctx) error {
 
 func (h *DoctorHandler) Create(c *fiber.Ctx) error {
 	var req domain.CreateDoctorRequet
-	if err := utils.ValidateStruct(req); err != nil {
-		return utils.ResponseJSON(c, fiber.StatusBadRequest, err.Error(), nil)
+	if err := c.BodyParser(&req); err != nil {
+		log.Printf("Error parsing request body: %v", err)
+		return utils.ResponseJSON(c, fiber.StatusBadRequest, "Invalid request body", nil)
+	}
+
+	validationErrors := utils.ValidateStruct(req)
+	if validationErrors != nil { // Check if there are any validation errors
+		return utils.ResponseJSON(c, fiber.StatusBadRequest, "Validation failed", validationErrors)
 	}
 
 	// Convert request to entity
@@ -93,8 +99,14 @@ func (h *DoctorHandler) Update(c *fiber.Ctx) error {
 	id := c.Params("id")
 
 	var req domain.UpdateDoctorRequet
-	if err := utils.ValidateStruct(req); err != nil {
-		return utils.ResponseJSON(c, fiber.StatusBadRequest, err.Error(), nil)
+	if err := c.BodyParser(&req); err != nil {
+		log.Printf("Error parsing request body: %v", err)
+		return utils.ResponseJSON(c, fiber.StatusBadRequest, "Invalid request body", nil)
+	}
+
+	validationErrors := utils.ValidateStruct(req)
+	if validationErrors != nil { // Check if there are any validation errors
+		return utils.ResponseJSON(c, fiber.StatusBadRequest, "Validation failed", validationErrors)
 	}
 
 	// Get existing doctor to preserve some fields

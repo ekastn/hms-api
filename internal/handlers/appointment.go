@@ -75,8 +75,13 @@ func (h *AppointmentHandler) GetAppointmentDetail(c *fiber.Ctx) error {
 
 func (h *AppointmentHandler) Create(c *fiber.Ctx) error {
 	var body domain.AppointmentDTO
-	if err := utils.ValidateStruct(body); err != nil {
-		return utils.ResponseJSON(c, fiber.StatusBadRequest, err.Error(), nil)
+	if err := c.BodyParser(&body); err != nil {
+		log.Printf("Error parsing request body: %v", err)
+		return utils.ResponseJSON(c, fiber.StatusBadRequest, "Invalid request body", nil)
+	}
+	validationErrors := utils.ValidateStruct(body)
+	if validationErrors != nil { // Check if there are any validation errors
+		return utils.ResponseJSON(c, fiber.StatusBadRequest, "Validation failed", validationErrors)
 	}
 
 	// Convert DTO to Entity
@@ -103,8 +108,13 @@ func (h *AppointmentHandler) Update(c *fiber.Ctx) error {
 	}
 
 	var body domain.AppointmentDTO
-	if err := utils.ValidateStruct(body); err != nil {
-		return utils.ResponseJSON(c, fiber.StatusBadRequest, err.Error(), nil)
+	if err := c.BodyParser(&body); err != nil {
+		log.Printf("Error parsing request body: %v", err)
+		return utils.ResponseJSON(c, fiber.StatusBadRequest, "Invalid request body", nil)
+	}
+	validationErrors := utils.ValidateStruct(body)
+	if validationErrors != nil { // Check if there are any validation errors
+		return utils.ResponseJSON(c, fiber.StatusBadRequest, "Validation failed", validationErrors)
 	}
 
 	appointment, err := body.ToEntity()

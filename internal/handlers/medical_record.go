@@ -110,8 +110,14 @@ func (h *MedicalRecordHandler) GetByDateRange(c *fiber.Ctx) error {
 
 func (h *MedicalRecordHandler) Create(c *fiber.Ctx) error {
 	var req domain.CreateMedicalRecordRequest
-	if err := utils.ValidateStruct(req); err != nil {
-		return utils.ResponseJSON(c, fiber.StatusBadRequest, err.Error(), nil)
+	if err := c.BodyParser(&req); err != nil {
+		log.Printf("Error parsing request body: %v", err)
+		return utils.ResponseJSON(c, fiber.StatusBadRequest, "Invalid request body", nil)
+	}
+
+	validationErrors := utils.ValidateStruct(req)
+	if validationErrors != nil { // Check if there are any validation errors
+		return utils.ResponseJSON(c, fiber.StatusBadRequest, "Validation failed", validationErrors)
 	}
 
 	// Convert string IDs to ObjectID
@@ -154,8 +160,14 @@ func (h *MedicalRecordHandler) Update(c *fiber.Ctx) error {
 	}
 
 	var req domain.UpdateMedicalRecordRequest
-	if err := utils.ValidateStruct(req); err != nil {
-		return utils.ResponseJSON(c, fiber.StatusBadRequest, err.Error(), nil)
+	if err := c.BodyParser(&req); err != nil {
+		log.Printf("Error parsing request body: %v", err)
+		return utils.ResponseJSON(c, fiber.StatusBadRequest, "Invalid request body", nil)
+	}
+
+	validationErrors := utils.ValidateStruct(req)
+	if validationErrors != nil { // Check if there are any validation errors
+		return utils.ResponseJSON(c, fiber.StatusBadRequest, "Validation failed", validationErrors)
 	}
 
 	existingRecord, err := h.recordService.GetByID(c.Context(), id)

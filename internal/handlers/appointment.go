@@ -75,9 +75,8 @@ func (h *AppointmentHandler) GetAppointmentDetail(c *fiber.Ctx) error {
 
 func (h *AppointmentHandler) Create(c *fiber.Ctx) error {
 	var body domain.AppointmentDTO
-	if err := c.BodyParser(&body); err != nil {
-		log.Printf("Error parsing request body: %v", err)
-		return utils.ResponseJSON(c, fiber.StatusBadRequest, "Invalid request body", nil)
+	if err := utils.ValidateStruct(body); err != nil {
+		return utils.ResponseJSON(c, fiber.StatusBadRequest, err.Error(), nil)
 	}
 
 	// Convert DTO to Entity
@@ -94,13 +93,7 @@ func (h *AppointmentHandler) Create(c *fiber.Ctx) error {
 		return utils.ResponseJSON(c, fiber.StatusInternalServerError, err.Error(), nil)
 	}
 
-	createdAppointment, err := h.appointmentService.GetByID(c.Context(), id)
-	if err != nil {
-		log.Printf("Error fetching created appointment: %v", err)
-		return utils.ResponseJSON(c, fiber.StatusInternalServerError, "Appointment created but failed to fetch details", nil)
-	}
-
-	return utils.ResponseJSON(c, fiber.StatusCreated, "Appointment created successfully", createdAppointment.ToDTO())
+	return utils.ResponseJSON(c, fiber.StatusCreated, "Appointment created successfully", fiber.Map{"id": id})
 }
 
 func (h *AppointmentHandler) Update(c *fiber.Ctx) error {
@@ -110,9 +103,8 @@ func (h *AppointmentHandler) Update(c *fiber.Ctx) error {
 	}
 
 	var body domain.AppointmentDTO
-	if err := c.BodyParser(&body); err != nil {
-		log.Printf("Error parsing request body: %v", err)
-		return utils.ResponseJSON(c, fiber.StatusBadRequest, "Invalid request body", nil)
+	if err := utils.ValidateStruct(body); err != nil {
+		return utils.ResponseJSON(c, fiber.StatusBadRequest, err.Error(), nil)
 	}
 
 	appointment, err := body.ToEntity()
@@ -127,13 +119,7 @@ func (h *AppointmentHandler) Update(c *fiber.Ctx) error {
 		return utils.ResponseJSON(c, fiber.StatusInternalServerError, err.Error(), nil)
 	}
 
-	updatedAppointment, err := h.appointmentService.GetByID(c.Context(), id)
-	if err != nil {
-		log.Printf("Error fetching updated appointment: %v", err)
-		return utils.ResponseJSON(c, fiber.StatusInternalServerError, "Appointment updated but failed to fetch details", nil)
-	}
-
-	return utils.ResponseJSON(c, fiber.StatusOK, "Appointment updated successfully", updatedAppointment.ToDTO())
+	return utils.ResponseJSON(c, fiber.StatusNoContent, "Appointment updated successfully", nil)
 }
 
 func (h *AppointmentHandler) Delete(c *fiber.Ctx) error {

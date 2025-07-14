@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"log"
+	
 	"time"
 
 	"github.com/ekastn/hms-api/internal/domain"
@@ -66,8 +66,7 @@ func (h *DoctorHandler) GetDoctorDetail(c *fiber.Ctx) error {
 
 func (h *DoctorHandler) Create(c *fiber.Ctx) error {
 	var req domain.CreateDoctorRequet
-	if err := c.BodyParser(&req); err != nil {
-		log.Println(err)
+	if err := utils.ValidateStruct(req); err != nil {
 		return utils.ResponseJSON(c, fiber.StatusBadRequest, err.Error(), nil)
 	}
 
@@ -87,20 +86,14 @@ func (h *DoctorHandler) Create(c *fiber.Ctx) error {
 		return utils.ResponseJSON(c, fiber.StatusInternalServerError, err.Error(), nil)
 	}
 
-	// Fetch the created doctor to return complete data
-	createdDoc, err := h.docService.GetByID(c.Context(), id)
-	if err != nil {
-		return utils.ResponseJSON(c, fiber.StatusInternalServerError, "Doctor created but failed to fetch data", nil)
-	}
-
-	return utils.ResponseJSON(c, fiber.StatusCreated, "Doctor created successfully", createdDoc.ToDTO())
+	return utils.ResponseJSON(c, fiber.StatusCreated, "Doctor created successfully", fiber.Map{"id": id})
 }
 
 func (h *DoctorHandler) Update(c *fiber.Ctx) error {
 	id := c.Params("id")
 
 	var req domain.UpdateDoctorRequet
-	if err := c.BodyParser(&req); err != nil {
+	if err := utils.ValidateStruct(req); err != nil {
 		return utils.ResponseJSON(c, fiber.StatusBadRequest, err.Error(), nil)
 	}
 
@@ -126,13 +119,7 @@ func (h *DoctorHandler) Update(c *fiber.Ctx) error {
 		return utils.ResponseJSON(c, fiber.StatusInternalServerError, err.Error(), nil)
 	}
 
-	// Fetch the updated doctor to return complete data
-	updatedDoc, err := h.docService.GetByID(c.Context(), id)
-	if err != nil {
-		return utils.ResponseJSON(c, fiber.StatusInternalServerError, "Doctor updated but failed to fetch updated data", nil)
-	}
-
-	return utils.ResponseJSON(c, fiber.StatusOK, "Doctor updated successfully", updatedDoc.ToDTO())
+	return utils.ResponseJSON(c, fiber.StatusNoContent, "Doctor updated successfully", nil)
 }
 
 func (h *DoctorHandler) Delete(c *fiber.Ctx) error {

@@ -110,8 +110,8 @@ func (h *MedicalRecordHandler) GetByDateRange(c *fiber.Ctx) error {
 
 func (h *MedicalRecordHandler) Create(c *fiber.Ctx) error {
 	var req domain.CreateMedicalRecordRequest
-	if err := c.BodyParser(&req); err != nil {
-		return utils.ResponseJSON(c, fiber.StatusBadRequest, "Invalid request body", nil)
+	if err := utils.ValidateStruct(req); err != nil {
+		return utils.ResponseJSON(c, fiber.StatusBadRequest, err.Error(), nil)
 	}
 
 	// Convert string IDs to ObjectID
@@ -154,8 +154,8 @@ func (h *MedicalRecordHandler) Update(c *fiber.Ctx) error {
 	}
 
 	var req domain.UpdateMedicalRecordRequest
-	if err := c.BodyParser(&req); err != nil {
-		return utils.ResponseJSON(c, fiber.StatusBadRequest, "Invalid request body", nil)
+	if err := utils.ValidateStruct(req); err != nil {
+		return utils.ResponseJSON(c, fiber.StatusBadRequest, err.Error(), nil)
 	}
 
 	existingRecord, err := h.recordService.GetByID(c.Context(), id)
@@ -191,13 +191,7 @@ func (h *MedicalRecordHandler) Update(c *fiber.Ctx) error {
 		return utils.ResponseJSON(c, fiber.StatusInternalServerError, "Failed to update medical record", nil)
 	}
 
-	updatedRecord, err := h.recordService.GetByID(c.Context(), id)
-	if err != nil {
-		log.Printf("Error getting updated medical record: %v", err)
-		return utils.ResponseJSON(c, fiber.StatusInternalServerError, "Failed to get updated medical record", nil)
-	}
-
-	return utils.ResponseJSON(c, fiber.StatusOK, "Medical record updated", updatedRecord.ToDTO())
+	return utils.ResponseJSON(c, fiber.StatusNoContent, "Medical record updated successfully", nil)
 }
 
 func (h *MedicalRecordHandler) Delete(c *fiber.Ctx) error {

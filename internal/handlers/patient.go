@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"log"
+	
 	"time"
 
 	"github.com/ekastn/hms-api/internal/domain"
@@ -67,8 +67,7 @@ func (h *PatientHandler) GetPatientDetail(c *fiber.Ctx) error {
 
 func (h *PatientHandler) Create(c *fiber.Ctx) error {
 	var req domain.CreatePatientRequest
-	if err := c.BodyParser(&req); err != nil {
-		log.Println(err)
+	if err := utils.ValidateStruct(req); err != nil {
 		return utils.ResponseJSON(c, fiber.StatusBadRequest, err.Error(), nil)
 	}
 
@@ -88,20 +87,14 @@ func (h *PatientHandler) Create(c *fiber.Ctx) error {
 		return utils.ResponseJSON(c, fiber.StatusInternalServerError, err.Error(), nil)
 	}
 
-	// Fetch the created patient to return complete data
-	createdPatient, err := h.patientService.GetByID(c.Context(), id)
-	if err != nil {
-		return utils.ResponseJSON(c, fiber.StatusInternalServerError, "Patient created but failed to fetch data", nil)
-	}
-
-	return utils.ResponseJSON(c, fiber.StatusCreated, "Patient created successfully", createdPatient.ToDTO())
+	return utils.ResponseJSON(c, fiber.StatusCreated, "Patient created successfully", fiber.Map{"id": id})
 }
 
 func (h *PatientHandler) Update(c *fiber.Ctx) error {
 	id := c.Params("id")
 
 	var req domain.UpdatePatientRequest
-	if err := c.BodyParser(&req); err != nil {
+	if err := utils.ValidateStruct(req); err != nil {
 		return utils.ResponseJSON(c, fiber.StatusBadRequest, err.Error(), nil)
 	}
 
@@ -120,13 +113,7 @@ func (h *PatientHandler) Update(c *fiber.Ctx) error {
 		return utils.ResponseJSON(c, fiber.StatusInternalServerError, err.Error(), nil)
 	}
 
-	// Fetch the updated patient to return complete data
-	updatedPatient, err := h.patientService.GetByID(c.Context(), id)
-	if err != nil {
-		return utils.ResponseJSON(c, fiber.StatusInternalServerError, "Patient updated but failed to fetch data", nil)
-	}
-
-	return utils.ResponseJSON(c, fiber.StatusOK, "Patient updated successfully", updatedPatient.ToDTO())
+	return utils.ResponseJSON(c, fiber.StatusNoContent, "Patient updated successfully", nil)
 }
 
 func (h *PatientHandler) Delete(c *fiber.Ctx) error {

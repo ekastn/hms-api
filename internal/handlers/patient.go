@@ -23,7 +23,7 @@ func NewPatientHandler(patientService *service.PatientService) *PatientHandler {
 func (h *PatientHandler) GetAll(c *fiber.Ctx) error {
 	patients, err := h.patientService.GetAll(c.Context())
 	if err != nil {
-		return utils.ResponseJSON(c, fiber.StatusInternalServerError, err.Error(), nil)
+		return utils.ErrorResponseJSON(c, fiber.StatusInternalServerError, err.Error(), nil)
 	}
 
 	var patientDtos []domain.PatientDTO
@@ -38,11 +38,11 @@ func (h *PatientHandler) GetByID(c *fiber.Ctx) error {
 	id := c.Params("id")
 	patient, err := h.patientService.GetByID(c.Context(), id)
 	if err != nil {
-		return utils.ResponseJSON(c, fiber.StatusInternalServerError, err.Error(), nil)
+		return utils.ErrorResponseJSON(c, fiber.StatusInternalServerError, err.Error(), nil)
 	}
 
 	if patient == nil {
-		return utils.ResponseJSON(c, fiber.StatusNotFound, "Patient not found", nil)
+		return utils.ErrorResponseJSON(c, fiber.StatusNotFound, "Patient not found", nil)
 	}
 
 	return utils.ResponseJSON(c, fiber.StatusOK, "Patient details", patient.ToDTO())
@@ -55,11 +55,11 @@ func (h *PatientHandler) GetPatientDetail(c *fiber.Ctx) error {
 	// Get patient detail with related data
 	detail, err := h.patientService.GetPatientDetail(c.Context(), id)
 	if err != nil {
-		return utils.ResponseJSON(c, fiber.StatusInternalServerError, err.Error(), nil)
+		return utils.ErrorResponseJSON(c, fiber.StatusInternalServerError, err.Error(), nil)
 	}
 
 	if detail == nil {
-		return utils.ResponseJSON(c, fiber.StatusNotFound, "Patient not found", nil)
+		return utils.ErrorResponseJSON(c, fiber.StatusNotFound, "Patient not found", nil)
 	}
 
 	return utils.ResponseJSON(c, fiber.StatusOK, "Patient details with appointments and medical history", detail)
@@ -69,12 +69,12 @@ func (h *PatientHandler) Create(c *fiber.Ctx) error {
 	var req domain.CreatePatientRequest
 	if err := c.BodyParser(&req); err != nil {
 		log.Printf("Error parsing request body: %v", err)
-		return utils.ResponseJSON(c, fiber.StatusBadRequest, "Invalid request body", nil)
+		return utils.ErrorResponseJSON(c, fiber.StatusBadRequest, "Invalid request body", nil)
 	}
 
 	validationErrors := utils.ValidateStruct(req)
 	if validationErrors != nil { // Check if there are any validation errors
-		return utils.ResponseJSON(c, fiber.StatusBadRequest, "Validation failed", validationErrors)
+		return utils.ErrorResponseJSON(c, fiber.StatusBadRequest, "Validation failed", validationErrors)
 	}
 
 	// Convert request to entity
@@ -90,7 +90,7 @@ func (h *PatientHandler) Create(c *fiber.Ctx) error {
 
 	id, err := h.patientService.Create(c.Context(), &patientEntity)
 	if err != nil {
-		return utils.ResponseJSON(c, fiber.StatusInternalServerError, err.Error(), nil)
+		return utils.ErrorResponseJSON(c, fiber.StatusInternalServerError, err.Error(), nil)
 	}
 
 	return utils.ResponseJSON(c, fiber.StatusCreated, "Patient created successfully", fiber.Map{"id": id})
@@ -102,12 +102,12 @@ func (h *PatientHandler) Update(c *fiber.Ctx) error {
 	var req domain.UpdatePatientRequest
 	if err := c.BodyParser(&req); err != nil {
 		log.Printf("Error parsing request body: %v", err)
-		return utils.ResponseJSON(c, fiber.StatusBadRequest, "Invalid request body", nil)
+		return utils.ErrorResponseJSON(c, fiber.StatusBadRequest, "Invalid request body", nil)
 	}
 
 	validationErrors := utils.ValidateStruct(req)
 	if validationErrors != nil { // Check if there are any validation errors
-		return utils.ResponseJSON(c, fiber.StatusBadRequest, "Validation failed", validationErrors)
+		return utils.ErrorResponseJSON(c, fiber.StatusBadRequest, "Validation failed", validationErrors)
 	}
 
 	// Convert request to entity
@@ -122,7 +122,7 @@ func (h *PatientHandler) Update(c *fiber.Ctx) error {
 
 	err := h.patientService.Update(c.Context(), id, &patientEntity)
 	if err != nil {
-		return utils.ResponseJSON(c, fiber.StatusInternalServerError, err.Error(), nil)
+		return utils.ErrorResponseJSON(c, fiber.StatusInternalServerError, err.Error(), nil)
 	}
 
 	return utils.ResponseJSON(c, fiber.StatusNoContent, "Patient updated successfully", nil)
@@ -133,7 +133,7 @@ func (h *PatientHandler) Delete(c *fiber.Ctx) error {
 
 	err := h.patientService.Delete(c.Context(), id)
 	if err != nil {
-		return utils.ResponseJSON(c, fiber.StatusInternalServerError, err.Error(), nil)
+		return utils.ErrorResponseJSON(c, fiber.StatusInternalServerError, err.Error(), nil)
 	}
 
 	return utils.ResponseJSON(c, fiber.StatusNoContent, "Patient deleted successfully", nil)

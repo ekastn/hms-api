@@ -19,7 +19,7 @@ func NewDashboardHandler(dashboardService *service.DashboardService) *DashboardH
 func (h *DashboardHandler) GetDashboardData(c *fiber.Ctx) error {
 	data, err := h.dashboardService.GetDashboardData(c.Context())
 	if err != nil {
-		return utils.ResponseJSON(c, fiber.StatusInternalServerError, "Failed to get dashboard data", nil)
+		return utils.ErrorResponseJSON(c, fiber.StatusInternalServerError, "Failed to get dashboard data", nil)
 	}
 
 	return c.JSON(data)

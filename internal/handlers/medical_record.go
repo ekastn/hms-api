@@ -19,7 +19,7 @@ func (h *MedicalRecordHandler) GetAll(c *fiber.Ctx) error {
 	records, err := h.recordService.GetAll(c.Context())
 	if err != nil {
 		log.Printf("Error getting medical records: %v", err)
-		return utils.ResponseJSON(c, fiber.StatusInternalServerError, "Failed to get medical records", nil)
+		return utils.ErrorResponseJSON(c, fiber.StatusInternalServerError, "Failed to get medical records", nil)
 	}
 
 	// Convert entities to DTOs
@@ -46,11 +46,11 @@ func (h *MedicalRecordHandler) GetByID(c *fiber.Ctx) error {
 	record, err := h.recordService.GetByID(c.Context(), id)
 	if err != nil {
 		log.Printf("Error getting medical record: %v", err)
-		return utils.ResponseJSON(c, fiber.StatusInternalServerError, "Failed to get medical record", nil)
+		return utils.ErrorResponseJSON(c, fiber.StatusInternalServerError, "Failed to get medical record", nil)
 	}
 
 	if record == nil {
-		return utils.ResponseJSON(c, fiber.StatusNotFound, "Medical record not found", nil)
+		return utils.ErrorResponseJSON(c, fiber.StatusNotFound, "Medical record not found", nil)
 	}
 
 	return utils.ResponseJSON(c, fiber.StatusOK, "Medical record details", record.ToDTO())
@@ -65,7 +65,7 @@ func (h *MedicalRecordHandler) GetByPatientID(c *fiber.Ctx) error {
 	records, err := h.recordService.GetByPatientID(c.Context(), patientID)
 	if err != nil {
 		log.Printf("Error getting medical records: %v", err)
-		return utils.ResponseJSON(c, fiber.StatusInternalServerError, "Failed to get medical records", nil)
+		return utils.ErrorResponseJSON(c, fiber.StatusInternalServerError, "Failed to get medical records", nil)
 	}
 
 	var recordDTOs []domain.MedicalRecordDTO
@@ -97,7 +97,7 @@ func (h *MedicalRecordHandler) GetByDateRange(c *fiber.Ctx) error {
 	records, err := h.recordService.GetByDateRange(c.Context(), startDate, endDate)
 	if err != nil {
 		log.Printf("Error getting medical records: %v", err)
-		return utils.ResponseJSON(c, fiber.StatusInternalServerError, "Failed to get medical records", nil)
+		return utils.ErrorResponseJSON(c, fiber.StatusInternalServerError, "Failed to get medical records", nil)
 	}
 
 	var recordDTOs []domain.MedicalRecordDTO
@@ -112,12 +112,12 @@ func (h *MedicalRecordHandler) Create(c *fiber.Ctx) error {
 	var req domain.CreateMedicalRecordRequest
 	if err := c.BodyParser(&req); err != nil {
 		log.Printf("Error parsing request body: %v", err)
-		return utils.ResponseJSON(c, fiber.StatusBadRequest, "Invalid request body", nil)
+		return utils.ErrorResponseJSON(c, fiber.StatusBadRequest, "Invalid request body", nil)
 	}
 
 	validationErrors := utils.ValidateStruct(req)
 	if validationErrors != nil { // Check if there are any validation errors
-		return utils.ResponseJSON(c, fiber.StatusBadRequest, "Validation failed", validationErrors)
+		return utils.ErrorResponseJSON(c, fiber.StatusBadRequest, "Validation failed", validationErrors)
 	}
 
 	// Convert string IDs to ObjectID
@@ -162,22 +162,22 @@ func (h *MedicalRecordHandler) Update(c *fiber.Ctx) error {
 	var req domain.UpdateMedicalRecordRequest
 	if err := c.BodyParser(&req); err != nil {
 		log.Printf("Error parsing request body: %v", err)
-		return utils.ResponseJSON(c, fiber.StatusBadRequest, "Invalid request body", nil)
+		return utils.ErrorResponseJSON(c, fiber.StatusBadRequest, "Invalid request body", nil)
 	}
 
 	validationErrors := utils.ValidateStruct(req)
 	if validationErrors != nil { // Check if there are any validation errors
-		return utils.ResponseJSON(c, fiber.StatusBadRequest, "Validation failed", validationErrors)
+		return utils.ErrorResponseJSON(c, fiber.StatusBadRequest, "Validation failed", validationErrors)
 	}
 
 	existingRecord, err := h.recordService.GetByID(c.Context(), id)
 	if err != nil {
 		log.Printf("Error getting medical record: %v", err)
-		return utils.ResponseJSON(c, fiber.StatusInternalServerError, "Failed to get medical record", nil)
+		return utils.ErrorResponseJSON(c, fiber.StatusInternalServerError, "Failed to get medical record", nil)
 	}
 
 	if existingRecord == nil {
-		return utils.ResponseJSON(c, fiber.StatusNotFound, "Medical record not found", nil)
+		return utils.ErrorResponseJSON(c, fiber.StatusNotFound, "Medical record not found", nil)
 	}
 
 	if req.RecordType != "" {
@@ -200,7 +200,7 @@ func (h *MedicalRecordHandler) Update(c *fiber.Ctx) error {
 
 	if err := h.recordService.Update(c.Context(), id, existingRecord); err != nil {
 		log.Printf("Error updating medical record: %v", err)
-		return utils.ResponseJSON(c, fiber.StatusInternalServerError, "Failed to update medical record", nil)
+		return utils.ErrorResponseJSON(c, fiber.StatusInternalServerError, "Failed to update medical record", nil)
 	}
 
 	return utils.ResponseJSON(c, fiber.StatusNoContent, "Medical record updated successfully", nil)
@@ -214,7 +214,7 @@ func (h *MedicalRecordHandler) Delete(c *fiber.Ctx) error {
 
 	if err := h.recordService.Delete(c.Context(), id); err != nil {
 		log.Printf("Error deleting medical record: %v", err)
-		return utils.ResponseJSON(c, fiber.StatusInternalServerError, "Failed to delete medical record", nil)
+		return utils.ErrorResponseJSON(c, fiber.StatusInternalServerError, "Failed to delete medical record", nil)
 	}
 
 	return utils.ResponseJSON(c, fiber.StatusOK, "Medical record deleted successfully", nil)

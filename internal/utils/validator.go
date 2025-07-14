@@ -30,6 +30,20 @@ func ValidateStruct(s interface{}) []ValidationError {
 				msg = fmt.Sprintf("The '%s' field must be a valid email address.", err.Field())
 			case "gt":
 				msg = fmt.Sprintf("The '%s' field must be greater than %s.", err.Field(), err.Param())
+			case "lte":
+				msg = fmt.Sprintf("The '%s' field must be less than or equal to %s.", err.Field(), err.Param())
+			case "min":
+				msg = fmt.Sprintf("The '%s' field must be at least %s characters long.", err.Field(), err.Param())
+			case "max":
+				msg = fmt.Sprintf("The '%s' field must be at most %s characters long.", err.Field(), err.Param())
+			case "oneof":
+				msg = fmt.Sprintf("The '%s' field must be one of: %s.", err.Field(), err.Param())
+			case "datetime":
+				msg = fmt.Sprintf("The '%s' field must be a valid date and time.", err.Field())
+			case "e164":
+				msg = fmt.Sprintf("The '%s' field must be a valid E.164 formatted phone number.", err.Field())
+			case "mongodb":
+				msg = fmt.Sprintf("The '%s' field must be a valid MongoDB ObjectID.", err.Field())
 			default:
 				msg = fmt.Sprintf("The '%s' field failed on the '%s' validation.", err.Field(), err.Tag())
 			}

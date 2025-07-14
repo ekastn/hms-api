@@ -58,15 +58,15 @@ type AppointmentEntity struct {
 
 type AppointmentDTO struct {
 	ID             string            `json:"id"`
-	PatientID      string            `json:"patientId" validate:"required"`
-	DoctorID       string            `json:"doctorId" validate:"required"`
-	Type           AppointmentType   `json:"type" validate:"required"`
-	DateTime       time.Time         `json:"dateTime" validate:"required"`
+	PatientID      string            `json:"patientId" validate:"required,mongodb"`
+	DoctorID       string            `json:"doctorId" validate:"required,mongodb"`
+	Type           AppointmentType   `json:"type" validate:"required,oneof=check-up follow-up consultation procedure emergency"`
+	DateTime       time.Time         `json:"dateTime" validate:"required,datetime"`
 	Duration       int               `json:"duration" validate:"required,gt=0"`
-	Status         AppointmentStatus `json:"status" validate:"required"`
-	Location       string            `json:"location" validate:"required"`
-	Notes          string            `json:"notes,omitempty"`
-	PatientHistory string            `json:"patientHistory,omitempty"`
+	Status         AppointmentStatus `json:"status" validate:"required,oneof=Scheduled Confirmed Completed Cancelled"`
+	Location       string            `json:"location" validate:"required,min=3,max=100"`
+	Notes          string            `json:"notes,omitempty" validate:"max=500"`
+	PatientHistory string            `json:"patientHistory,omitempty" validate:"max=1000"`
 	CreatedAt      time.Time         `json:"createdAt"`
 	UpdatedAt      time.Time         `json:"updatedAt"`
 }

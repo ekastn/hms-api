@@ -101,19 +101,19 @@ func (m *MedicalRecordEntity) ToDTO() MedicalRecordDTO {
 }
 
 type CreateMedicalRecordRequest struct {
-	PatientID   string `json:"patientId" validate:"required"`
-	DoctorID    string `json:"doctorId" validate:"required"`
-	RecordType  string `json:"recordType" validate:"required"`
-	Description string `json:"description" validate:"required"`
-	Diagnosis   string `json:"diagnosis" validate:"required"`
-	Treatment   string `json:"treatment" validate:"required"`
-	Notes       string `json:"notes,omitempty"`
+	PatientID   string `json:"patientId" validate:"required,mongodb"`
+	DoctorID    string `json:"doctorId" validate:"required,mongodb"`
+	RecordType  string `json:"recordType" validate:"required,oneof=checkup followup procedure emergency"`
+	Description string `json:"description" validate:"required,min=10,max=1000"`
+	Diagnosis   string `json:"diagnosis" validate:"required,min=5,max=200"`
+	Treatment   string `json:"treatment" validate:"required,min=5,max=1000"`
+	Notes       string `json:"notes,omitempty" validate:"max=500"`
 }
 
 type UpdateMedicalRecordRequest struct {
-	RecordType  string `json:"recordType,omitempty"`
-	Description string `json:"description,omitempty"`
-	Diagnosis   string `json:"diagnosis,omitempty"`
-	Treatment   string `json:"treatment,omitempty"`
-	Notes       string `json:"notes,omitempty"`
+	RecordType  string `json:"recordType,omitempty" validate:"oneof=checkup followup procedure emergency"`
+	Description string `json:"description,omitempty" validate:"min=10,max=1000"`
+	Diagnosis   string `json:"diagnosis,omitempty" validate:"min=5,max=200"`
+	Treatment   string `json:"treatment,omitempty" validate:"min=5,max=1000"`
+	Notes       string `json:"notes,omitempty" validate:"max=500"`
 }

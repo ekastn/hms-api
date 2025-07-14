@@ -62,16 +62,16 @@ func (d DoctorEntity) ToDTO() DoctorDTO {
 }
 
 type CreateDoctorRequet struct {
-	Name      string `json:"name" validate:"required"`
-	Specialty string `json:"specialty" validate:"required"`
-	Phone     string `json:"phone" validate:"required"`
+	Name      string `json:"name" validate:"required,min=3,max=100"`
+	Specialty string `json:"specialty" validate:"required,min=3,max=100"`
+	Phone     string `json:"phone" validate:"required,e164"`
 	Email     string `json:"email" validate:"required,email"`
 }
 
 type UpdateDoctorRequet struct {
-	Name      string `json:"name" validate:"required"`
-	Specialty string `json:"specialty" validate:"required"`
-	Phone     string `json:"phone" validate:"required"`
+	Name      string `json:"name" validate:"required,min=3,max=100"`
+	Specialty string `json:"specialty" validate:"required,min=3,max=100"`
+	Phone     string `json:"phone" validate:"required,e164"`
 	Email     string `json:"email" validate:"required,email"`
 }
 

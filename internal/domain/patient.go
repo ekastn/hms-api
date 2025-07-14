@@ -56,21 +56,21 @@ func (p PatientEntity) ToDTO() PatientDTO {
 }
 
 type CreatePatientRequest struct {
-	Name    string `json:"name" validate:"required"`
-	Age     int    `json:"age" validate:"required,gt=0"`
-	Gender  string `json:"gender" validate:"required"`
-	Phone   string `json:"phone" validate:"required"`
+	Name    string `json:"name" validate:"required,min=3,max=100"`
+	Age     int    `json:"age" validate:"required,gt=0,lte=120"`
+	Gender  string `json:"gender" validate:"required,oneof=Male Female Other"`
+	Phone   string `json:"phone" validate:"required,e164"`
 	Email   string `json:"email" validate:"required,email"`
-	Address string `json:"address" validate:"required"`
+	Address string `json:"address" validate:"required,min=10,max=200"`
 }
 
 type UpdatePatientRequest struct {
-	Name    string `json:"name" validate:"required"`
-	Age     int    `json:"age" validate:"required,gt=0"`
-	Gender  string `json:"gender" validate:"required"`
-	Phone   string `json:"phone" validate:"required"`
+	Name    string `json:"name" validate:"required,min=3,max=100"`
+	Age     int    `json:"age" validate:"required,gt=0,lte=120"`
+	Gender  string `json:"gender" validate:"required,oneof=Male Female Other"`
+	Phone   string `json:"phone" validate:"required,e164"`
 	Email   string `json:"email" validate:"required,email"`
-	Address string `json:"address" validate:"required"`
+	Address string `json:"address" validate:"required,min=10,max=200"`
 }
 
 type PatientDetailResponse struct {

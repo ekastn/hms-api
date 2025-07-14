@@ -57,19 +57,19 @@ func (p PatientEntity) ToDTO() PatientDTO {
 
 type CreatePatientRequest struct {
 	Name    string `json:"name" validate:"required"`
-	Age     int    `json:"age" validate:"required"`
+	Age     int    `json:"age" validate:"required,gt=0"`
 	Gender  string `json:"gender" validate:"required"`
 	Phone   string `json:"phone" validate:"required"`
-	Email   string `json:"email" validate:"required"`
+	Email   string `json:"email" validate:"required,email"`
 	Address string `json:"address" validate:"required"`
 }
 
 type UpdatePatientRequest struct {
 	Name    string `json:"name" validate:"required"`
-	Age     int    `json:"age" validate:"required"`
+	Age     int    `json:"age" validate:"required,gt=0"`
 	Gender  string `json:"gender" validate:"required"`
 	Phone   string `json:"phone" validate:"required"`
-	Email   string `json:"email" validate:"required"`
+	Email   string `json:"email" validate:"required,email"`
 	Address string `json:"address" validate:"required"`
 }
 

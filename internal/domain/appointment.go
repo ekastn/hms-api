@@ -15,6 +15,14 @@ const (
 	AppointmentStatusCancelled AppointmentStatus = "Cancelled"
 )
 
+func (as AppointmentStatus) IsValid() bool {
+	switch as {
+	case AppointmentStatusScheduled, AppointmentStatusConfirmed, AppointmentStatusCompleted, AppointmentStatusCancelled:
+		return true
+	}
+	return false
+}
+
 type AppointmentType string
 
 const (
@@ -24,6 +32,14 @@ const (
 	AppointmentTypeProcedure    AppointmentType = "procedure"
 	AppointmentTypeEmergency    AppointmentType = "emergency"
 )
+
+func (at AppointmentType) IsValid() bool {
+	switch at {
+	case AppointmentTypeCheckUp, AppointmentTypeFollowUp, AppointmentTypeConsultation, AppointmentTypeProcedure, AppointmentTypeEmergency:
+		return true
+	}
+	return false
+}
 
 type AppointmentEntity struct {
 	ID             primitive.ObjectID `bson:"_id,omitempty"`
@@ -42,13 +58,13 @@ type AppointmentEntity struct {
 
 type AppointmentDTO struct {
 	ID             string            `json:"id"`
-	PatientID      string            `json:"patientId"`
-	DoctorID       string            `json:"doctorId"`
-	Type           AppointmentType   `json:"type"`
-	DateTime       time.Time         `json:"dateTime"`
-	Duration       int               `json:"duration"` // in minutes
-	Status         AppointmentStatus `json:"status"`
-	Location       string            `json:"location"`
+	PatientID      string            `json:"patientId" validate:"required"`
+	DoctorID       string            `json:"doctorId" validate:"required"`
+	Type           AppointmentType   `json:"type" validate:"required"`
+	DateTime       time.Time         `json:"dateTime" validate:"required"`
+	Duration       int               `json:"duration" validate:"required,gt=0"`
+	Status         AppointmentStatus `json:"status" validate:"required"`
+	Location       string            `json:"location" validate:"required"`
 	Notes          string            `json:"notes,omitempty"`
 	PatientHistory string            `json:"patientHistory,omitempty"`
 	CreatedAt      time.Time         `json:"createdAt"`

@@ -65,14 +65,14 @@ type CreateDoctorRequet struct {
 	Name      string `json:"name" validate:"required"`
 	Specialty string `json:"specialty" validate:"required"`
 	Phone     string `json:"phone" validate:"required"`
-	Email     string `json:"email" validate:"required"`
+	Email     string `json:"email" validate:"required,email"`
 }
 
 type UpdateDoctorRequet struct {
 	Name      string `json:"name" validate:"required"`
 	Specialty string `json:"specialty" validate:"required"`
 	Phone     string `json:"phone" validate:"required"`
-	Email     string `json:"email" validate:"required"`
+	Email     string `json:"email" validate:"required,email"`
 }
 
 type DoctorDetailResponse struct {

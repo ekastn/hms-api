@@ -15,6 +15,14 @@ const (
 	RecordTypeEmergency MedicalRecordType = "emergency"
 )
 
+func (mrt MedicalRecordType) IsValid() bool {
+	switch mrt {
+	case RecordTypeCheckUp, RecordTypeFollowUp, RecordTypeProcedure, RecordTypeEmergency:
+		return true
+	}
+	return false
+}
+
 type MedicalRecordEntity struct {
 	ID          primitive.ObjectID `bson:"_id,omitempty"`
 	PatientID   primitive.ObjectID `bson:"patientId"`

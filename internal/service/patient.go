@@ -12,20 +12,23 @@ import (
 )
 
 type PatientService struct {
-	docRepo    *repository.PatientRepository
-	apptRepo   *repository.AppointmentRepository
-	recordRepo *repository.MedicalRecordRepository
+	docRepo        *repository.PatientRepository
+	apptRepo       *repository.AppointmentRepository
+	recordRepo     *repository.MedicalRecordRepository
+	activityService *ActivityService
 }
 
 func NewPatientService(
 	repo *repository.PatientRepository,
 	apptRepo *repository.AppointmentRepository,
 	recordRepo *repository.MedicalRecordRepository,
+	activityService *ActivityService,
 ) *PatientService {
 	return &PatientService{
-		docRepo:    repo,
-		apptRepo:   apptRepo,
-		recordRepo: recordRepo,
+		docRepo:        repo,
+		apptRepo:       apptRepo,
+		recordRepo:     recordRepo,
+		activityService: activityService,
 	}
 }
 
@@ -89,8 +92,8 @@ func (s *PatientService) GetPatientDetail(ctx context.Context, id string) (*doma
 
 func (s *PatientService) Create(ctx context.Context, patient *domain.PatientEntity) (string, error) {
 	// Validate required fields
-	if patient.Name == "" || patient.Phone == "" || patient.Email == "" {
-		return "", errors.New("name, phone, and email are required")
+	if err := validatePatientFields(patient); err != nil {
+		return "", err
 	}
 
 	// Set timestamps
@@ -98,12 +101,17 @@ func (s *PatientService) Create(ctx context.Context, patient *domain.PatientEnti
 	patient.CreatedAt = now
 	patient.UpdatedAt = now
 	patient.LastVisit = now
-	patient.ID = primitive.NewObjectID()
 
 	// Create patient in repository
 	id, err := s.docRepo.Create(ctx, patient)
 	if err != nil {
 		return "", fmt.Errorf("failed to create patient: %w", err)
+	}
+
+	err = s.activityService.CreateActivity(ctx, domain.ActivityTypePatient, "New Patient Registered", fmt.Sprintf("Patient %s (%s) has been registered.", patient.Name, patient.Email))
+	if err != nil {
+		// Log the error but don't block the patient creation
+		fmt.Printf("Warning: failed to log activity for new patient: %v\n", err)
 	}
 
 	return id.Hex(), nil
@@ -115,8 +123,8 @@ func (s *PatientService) Update(ctx context.Context, id string, patient *domain.
 	}
 
 	// Validate required fields
-	if patient.Name == "" || patient.Phone == "" || patient.Email == "" {
-		return errors.New("name, phone, and email are required")
+	if err := validatePatientFields(patient); err != nil {
+		return err
 	}
 
 	patientID, err := primitive.ObjectIDFromHex(id)
@@ -143,6 +151,25 @@ func (s *PatientService) Update(ctx context.Context, id string, patient *domain.
 		return fmt.Errorf("failed to update patient: %w", err)
 	}
 
+	err = s.activityService.CreateActivity(ctx, domain.ActivityTypePatient, "Patient Information Updated", fmt.Sprintf("Patient %s (%s) information has been updated.", patient.Name, patient.Email))
+	if err != nil {
+		// Log the error but don't block the patient update
+		fmt.Printf("Warning: failed to log activity for patient update: %v\n", err)
+	}
+
+	return nil
+}
+
+func validatePatientFields(patient *domain.PatientEntity) error {
+	if patient.Name == "" {
+		return errors.New("patient name is required")
+	}
+	if patient.Phone == "" {
+		return errors.New("patient phone is required")
+	}
+	if patient.Email == "" {
+		return errors.New("patient email is required")
+	}
 	return nil
 }
 
@@ -161,6 +188,12 @@ func (s *PatientService) Delete(ctx context.Context, id string) error {
 	// Delete patient from repository
 	if err := s.docRepo.Delete(ctx, patientID); err != nil {
 		return fmt.Errorf("failed to delete patient: %w", err)
+	}
+
+	err = s.activityService.CreateActivity(ctx, domain.ActivityTypePatient, "Patient Deleted", fmt.Sprintf("Patient with ID %s has been deleted.", id))
+	if err != nil {
+		// Log the error but don't block the patient deletion
+		fmt.Printf("Warning: failed to log activity for patient deletion: %v\n", err)
 	}
 
 	return nil

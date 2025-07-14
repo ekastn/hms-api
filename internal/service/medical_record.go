@@ -14,11 +14,13 @@ import (
 
 type MedicalRecordService struct {
 	recordRepo *repository.MedicalRecordRepository
+	activityService *ActivityService
 }
 
-func NewMedicalRecordService(recordRepo *repository.MedicalRecordRepository) *MedicalRecordService {
+func NewMedicalRecordService(recordRepo *repository.MedicalRecordRepository, activityService *ActivityService) *MedicalRecordService {
 	return &MedicalRecordService{
 		recordRepo: recordRepo,
+		activityService: activityService,
 	}
 }
 
@@ -43,6 +45,12 @@ func (s *MedicalRecordService) Create(ctx context.Context, record *domain.Medica
 	id, err := s.recordRepo.Create(ctx, record)
 	if err != nil {
 		return "", fmt.Errorf("failed to create medical record: %w", err)
+	}
+
+	err = s.activityService.CreateActivity(ctx, domain.ActivityTypeMedicalRecord, "New Medical Record Created", fmt.Sprintf("Medical record for patient %s (diagnosis: %s) has been created.", record.PatientID.Hex(), record.Diagnosis))
+	if err != nil {
+		// Log the error but don't block the medical record creation
+		fmt.Printf("Warning: failed to log activity for new medical record: %v\n", err)
 	}
 
 	return id.Hex(), nil
@@ -91,20 +99,7 @@ func (s *MedicalRecordService) Update(ctx context.Context, id string, record *do
 		return fmt.Errorf("invalid ID format: %w", err)
 	}
 
-	existingRecord, err := s.recordRepo.FindByID(ctx, recordID)
-	if err != nil {
-		return fmt.Errorf("failed to get medical record: %w", err)
-	}
-
-	if existingRecord == nil {
-		return errors.New("medical record not found")
-	}
-
-	// Preserve immutable fields
-	record.ID = recordID
-	record.PatientID = existingRecord.PatientID
-	record.DoctorID = existingRecord.DoctorID
-	record.CreatedAt = existingRecord.CreatedAt
+	
 
 	if err := validateMedicalRecord(record); err != nil {
 		return err
@@ -114,6 +109,12 @@ func (s *MedicalRecordService) Update(ctx context.Context, id string, record *do
 
 	if err := s.recordRepo.Update(ctx, recordID, record); err != nil {
 		return fmt.Errorf("failed to update medical record: %w", err)
+	}
+
+	err = s.activityService.CreateActivity(ctx, domain.ActivityTypeMedicalRecord, "Medical Record Updated", fmt.Sprintf("Medical record %s for patient %s has been updated.", id, record.PatientID.Hex()))
+	if err != nil {
+		// Log the error but don't block the medical record update
+		fmt.Printf("Warning: failed to log activity for medical record update: %v\n", err)
 	}
 
 	return nil
@@ -139,6 +140,12 @@ func (s *MedicalRecordService) Delete(ctx context.Context, id string) error {
 		return fmt.Errorf("failed to delete medical record: %w", err)
 	}
 
+	err = s.activityService.CreateActivity(ctx, domain.ActivityTypeMedicalRecord, "Medical Record Deleted", fmt.Sprintf("Medical record %s has been deleted.", id))
+	if err != nil {
+		// Log the error but don't block the medical record deletion
+		fmt.Printf("Warning: failed to log activity for medical record deletion: %v\n", err)
+	}
+
 	return nil
 }
 
@@ -155,11 +162,7 @@ func validateMedicalRecord(record *domain.MedicalRecordEntity) error {
 		return errors.New("record type is required")
 	}
 
-	switch record.RecordType {
-	case domain.RecordTypeCheckUp, domain.RecordTypeFollowUp,
-		domain.RecordTypeProcedure, domain.RecordTypeEmergency:
-		// valid type
-	default:
+	if !record.RecordType.IsValid() {
 		return fmt.Errorf("invalid record type: %s", record.RecordType)
 	}
 

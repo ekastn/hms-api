@@ -14,17 +14,20 @@ type DoctorService struct {
 	doctorRepo      *repository.DoctorRepository
 	appointmentRepo *repository.AppointmentRepository
 	patientRepo     *repository.PatientRepository
+	activityService *ActivityService
 }
 
 func NewDoctorService(
 	repo *repository.DoctorRepository,
 	appointmentRepo *repository.AppointmentRepository,
 	patientRepo *repository.PatientRepository,
+	activityService *ActivityService,
 ) *DoctorService {
 	return &DoctorService{
 		doctorRepo:      repo,
 		appointmentRepo: appointmentRepo,
 		patientRepo:     patientRepo,
+		activityService: activityService,
 	}
 }
 
@@ -83,31 +86,9 @@ func (s *DoctorService) Create(ctx context.Context, doctor *domain.DoctorEntity)
 		return "", fmt.Errorf("all fields are required")
 	}
 
-	// Check if name already exists
-	existingByName, err := s.doctorRepo.GetByName(ctx, doctor.Name)
-	if err != nil {
-		return "", fmt.Errorf("error checking name: %w", err)
-	}
-	if existingByName != nil {
-		return "", fmt.Errorf("doctor with this name already exists")
-	}
-
-	// Check if email already exists
-	existingByEmail, err := s.doctorRepo.GetByEmail(ctx, doctor.Email)
-	if err != nil {
-		return "", fmt.Errorf("error checking email: %w", err)
-	}
-	if existingByEmail != nil {
-		return "", fmt.Errorf("email already exists")
-	}
-
-	// Check if phone already exists
-	existingByPhone, err := s.doctorRepo.GetByPhone(ctx, doctor.Phone)
-	if err != nil {
-		return "", fmt.Errorf("error checking phone: %w", err)
-	}
-	if existingByPhone != nil {
-		return "", fmt.Errorf("phone number already exists")
+	// Check for duplicates
+	if err := s.checkDuplicateDoctor(ctx, doctor, primitive.NilObjectID); err != nil {
+		return "", err
 	}
 
 	// Set timestamps
@@ -119,6 +100,12 @@ func (s *DoctorService) Create(ctx context.Context, doctor *domain.DoctorEntity)
 	id, err := s.doctorRepo.Create(ctx, doctor)
 	if err != nil {
 		return "", fmt.Errorf("failed to create doctor: %w", err)
+	}
+
+	err = s.activityService.CreateActivity(ctx, domain.ActivityTypeDoctor, "New Doctor Added", fmt.Sprintf("Dr. %s (%s) has been added as a %s specialist.", doctor.Name, doctor.Email, doctor.Specialty))
+	if err != nil {
+		// Log the error but don't block the doctor creation
+		fmt.Printf("Warning: failed to log activity for new doctor: %v\n", err)
 	}
 
 	return id.Hex(), nil
@@ -139,7 +126,7 @@ func (s *DoctorService) Update(ctx context.Context, id string, doctor *domain.Do
 		return fmt.Errorf("invalid ID format: %w", err)
 	}
 
-	// Get existing doctor
+	// Get existing doctor to preserve created_at
 	existing, err := s.doctorRepo.GetByID(ctx, docID)
 	if err != nil {
 		return fmt.Errorf("failed to get doctor: %w", err)
@@ -148,37 +135,9 @@ func (s *DoctorService) Update(ctx context.Context, id string, doctor *domain.Do
 		return fmt.Errorf("doctor not found")
 	}
 
-	// Check if name is being changed and already exists
-	if existing.Name != doctor.Name {
-		existingByName, err := s.doctorRepo.GetByName(ctx, doctor.Name)
-		if err != nil {
-			return fmt.Errorf("error checking name: %w", err)
-		}
-		if existingByName != nil {
-			return fmt.Errorf("doctor with this name already exists")
-		}
-	}
-
-	// Check if email is being changed and already exists
-	if existing.Email != doctor.Email {
-		existingByEmail, err := s.doctorRepo.GetByEmail(ctx, doctor.Email)
-		if err != nil {
-			return fmt.Errorf("error checking email: %w", err)
-		}
-		if existingByEmail != nil {
-			return fmt.Errorf("email already exists")
-		}
-	}
-
-	// Check if phone is being changed and already exists
-	if existing.Phone != doctor.Phone {
-		existingByPhone, err := s.doctorRepo.GetByPhone(ctx, doctor.Phone)
-		if err != nil {
-			return fmt.Errorf("error checking phone: %w", err)
-		}
-		if existingByPhone != nil {
-			return fmt.Errorf("phone number already exists")
-		}
+	// Check for duplicates, excluding the current doctor
+	if err := s.checkDuplicateDoctor(ctx, doctor, docID); err != nil {
+		return err
 	}
 
 	// Preserve created_at and update updated_at
@@ -189,6 +148,44 @@ func (s *DoctorService) Update(ctx context.Context, id string, doctor *domain.Do
 		return fmt.Errorf("failed to update doctor: %w", err)
 	}
 
+	err = s.activityService.CreateActivity(ctx, domain.ActivityTypeDoctor, "Doctor Information Updated", fmt.Sprintf("Dr. %s (%s) information has been updated.", doctor.Name, doctor.Email))
+	if err != nil {
+		// Log the error but don't block the doctor update
+		fmt.Printf("Warning: failed to log activity for doctor update: %v\n", err)
+	}
+
+	return nil
+}
+
+// checkDuplicateDoctor is a helper function to check for existing doctors by name, email, or phone.
+// It excludes the doctor with currentDoctorID from the check (useful for update operations).
+func (s *DoctorService) checkDuplicateDoctor(ctx context.Context, doctor *domain.DoctorEntity, currentDoctorID primitive.ObjectID) error {
+	// Check if name already exists
+	existingByName, err := s.doctorRepo.GetByName(ctx, doctor.Name)
+	if err != nil {
+		return fmt.Errorf("error checking name: %w", err)
+	}
+	if existingByName != nil && existingByName.ID != currentDoctorID {
+		return fmt.Errorf("doctor with this name already exists")
+	}
+
+	// Check if email already exists
+	existingByEmail, err := s.doctorRepo.GetByEmail(ctx, doctor.Email)
+	if err != nil {
+		return fmt.Errorf("error checking email: %w", err)
+	}
+	if existingByEmail != nil && existingByEmail.ID != currentDoctorID {
+		return fmt.Errorf("email already exists")
+	}
+
+	// Check if phone already exists
+	existingByPhone, err := s.doctorRepo.GetByPhone(ctx, doctor.Phone)
+	if err != nil {
+		return fmt.Errorf("error checking phone: %w", err)
+	}
+	if existingByPhone != nil && existingByPhone.ID != currentDoctorID {
+		return fmt.Errorf("phone number already exists")
+	}
 	return nil
 }
 
@@ -209,6 +206,12 @@ func (s *DoctorService) Delete(ctx context.Context, id string) error {
 
 	if err := s.doctorRepo.Delete(ctx, docID); err != nil {
 		return fmt.Errorf("failed to delete doctor: %w", err)
+	}
+
+	err = s.activityService.CreateActivity(ctx, domain.ActivityTypeDoctor, "Doctor Deleted", fmt.Sprintf("Doctor with ID %s has been deleted.", id))
+	if err != nil {
+		// Log the error but don't block the doctor deletion
+		fmt.Printf("Warning: failed to log activity for doctor deletion: %v\n", err)
 	}
 
 	return nil

@@ -2,7 +2,7 @@ package service
 
 import (
 	"context"
-	"time"
+	
 
 	"github.com/ekastn/hms-api/internal/domain"
 	"github.com/ekastn/hms-api/internal/repository"
@@ -13,6 +13,7 @@ type DashboardService struct {
 	docRepo     *repository.DoctorRepository
 	apptRepo    *repository.AppointmentRepository
 	recordRepo  *repository.MedicalRecordRepository
+	activityRepo *repository.ActivityRepository
 }
 
 func NewDashboardService(
@@ -20,12 +21,14 @@ func NewDashboardService(
 	docRepo *repository.DoctorRepository,
 	apptRepo *repository.AppointmentRepository,
 	recordRepo *repository.MedicalRecordRepository,
+	activityRepo *repository.ActivityRepository,
 ) *DashboardService {
 	return &DashboardService{
 		patientRepo: patientRepo,
 		docRepo:     docRepo,
 		apptRepo:    apptRepo,
 		recordRepo:  recordRepo,
+		activityRepo: activityRepo,
 	}
 }
 
@@ -109,9 +112,22 @@ func (s *DashboardService) GetDashboardData(ctx context.Context) (*domain.Dashbo
 	}
 
 	// Get recent activities (last 10 activities)
-	recentActivities, err := s.getRecentActivities(ctx, 10)
+	recentActivities, err := s.activityRepo.GetRecent(ctx, 10)
 	if err != nil {
 		return nil, err
+	}
+
+	var recentActivitiesDTOs []domain.Activity
+	for _, activity := range recentActivities {
+		if activity != nil {
+			recentActivitiesDTOs = append(recentActivitiesDTOs, domain.Activity{
+				ID:          activity.ID.Hex(),
+				Type:        string(activity.Type),
+				Title:       activity.Title,
+				Description: activity.Description,
+				Timestamp:   activity.Timestamp,
+			})
+		}
 	}
 
 	return &domain.DashboardResponse{
@@ -121,31 +137,7 @@ func (s *DashboardService) GetDashboardData(ctx context.Context) (*domain.Dashbo
 			AppointmentsCount:   apptsCount,
 			MedicalRecordsCount: recordsCount,
 		},
-		RecentActivities:     recentActivities,
+		RecentActivities:     recentActivitiesDTOs,
 		UpcomingAppointments: upcomingAppointments,
-	}, nil
-}
-
-func (s *DashboardService) getRecentActivities(ctx context.Context, limit int) ([]domain.Activity, error) {
-	// TODO: This is a simplified implementation
-	// 1. Create a dedicated activities collection
-	// 2. Log activities when important events happen (appointment created, patient registered, etc.)
-	// 3. Query the activities collection with proper sorting and limiting
-
-	return []domain.Activity{
-		{
-			ID:          "1",
-			Type:        "APPOINTMENT",
-			Title:       "New appointment scheduled",
-			Description: "Dr. Smith has a new appointment with John Doe",
-			Timestamp:   time.Now(),
-		},
-		{
-			ID:          "2",
-			Type:        "MEDICAL_RECORD",
-			Title:       "Medical record updated",
-			Description: "Updated medical record for patient Jane Smith",
-			Timestamp:   time.Now().Add(-1 * time.Hour),
-		},
 	}, nil
 }

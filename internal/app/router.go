@@ -13,29 +13,36 @@ func (a *App) setupRoutes() {
 	docRepo := repository.NewDoctorRepository(a.db.Collection("doctors"))
 	appointmentRepo := repository.NewAppointmentRepository(a.db.Collection("appointments"))
 	medicalRecordRepo := repository.NewMedicalRecordRepository(a.db.Collection("medical_records"))
+	activityRepo := repository.NewActivityRepository(a.db.Collection("activities"))
 
 	// Initialize services
+	activityService := service.NewActivityService(activityRepo)
 	patientService := service.NewPatientService(
 		patientRepo,
 		appointmentRepo,
 		medicalRecordRepo,
+		activityService,
 	)
 	docService := service.NewDoctorService(
 		docRepo,
 		appointmentRepo,
 		patientRepo,
+		activityService,
 	)
 	appointmentService := service.NewAppointmentService(
 		appointmentRepo,
 		patientRepo,
 		medicalRecordRepo,
+		activityService,
+		a.db.Client(),
 	)
-	medicalRecordService := service.NewMedicalRecordService(medicalRecordRepo)
+	medicalRecordService := service.NewMedicalRecordService(medicalRecordRepo, activityService)
 	dashboardService := service.NewDashboardService(
 		patientRepo,
 		docRepo,
 		appointmentRepo,
 		medicalRecordRepo,
+		activityRepo,
 	)
 
 	// Initialize handlers

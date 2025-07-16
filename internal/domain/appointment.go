@@ -52,6 +52,8 @@ type AppointmentEntity struct {
 	Location       string             `bson:"location"`
 	Notes          string             `bson:"notes,omitempty"`
 	PatientHistory string             `bson:"patientHistory,omitempty"`
+	CreatedBy      primitive.ObjectID `bson:"createdBy"`
+	UpdatedBy      primitive.ObjectID `bson:"updatedBy"`
 	CreatedAt      time.Time          `bson:"createdAt"`
 	UpdatedAt      time.Time          `bson:"updatedAt"`
 }

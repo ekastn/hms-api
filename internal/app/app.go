@@ -26,8 +26,9 @@ type App struct {
 }
 
 type config struct {
-	addr     string
-	mongoCfg mongoDbCfg
+	addr      string
+	mongoCfg  mongoDbCfg
+	jwtSecret string
 }
 
 type mongoDbCfg struct {
@@ -99,9 +100,10 @@ func (a *App) loadConfig() {
 	cfg := config{
 		addr: env.GetString("APP_ADDR", ":3000"),
 		mongoCfg: mongoDbCfg{
-			addr: env.GetString("MONGO_ADDR", "mongodb://localhost:27017"),
-			db:   env.GetString("MONGO_DB", "hms"),
+			addr:      env.GetString("MONGO_ADDR", "mongodb://localhost:27017"),
+			db:        env.GetString("MONGO_DB", "hms"),
 		},
+		jwtSecret: env.GetString("JWT_SECRET", "your-secret-key"),
 	}
 
 	a.cfg = cfg

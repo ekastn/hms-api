@@ -74,7 +74,7 @@ func (r *DoctorRepository) GetByID(ctx context.Context, id primitive.ObjectID) (
 }
 
 func (r *DoctorRepository) GetAll(ctx context.Context) ([]*domain.DoctorEntity, error) {
-	cur, err := r.coll.Find(ctx, bson.D{})
+	cur, err := r.coll.Find(ctx, bson.M{"isDeleted": bson.M{"$ne": true}})
 	if err != nil {
 		return nil, err
 	}
@@ -102,5 +102,5 @@ func (r *DoctorRepository) Delete(ctx context.Context, id primitive.ObjectID) er
 }
 
 func (r *DoctorRepository) Count(ctx context.Context) (int64, error) {
-	return r.coll.CountDocuments(ctx, bson.M{})
+	return r.coll.CountDocuments(ctx, bson.M{"isDeleted": bson.M{"$ne": true}})
 }

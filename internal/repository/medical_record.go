@@ -76,6 +76,7 @@ func (r *MedicalRecordRepository) GetByDateRange(ctx context.Context, start, end
 			"$gte": start,
 			"$lte": end,
 		},
+		"isDeleted": bson.M{"$ne": true},
 	}
 	return r.findRecords(ctx, filter, options.Find().SetSort(bson.D{{Key: "date", Value: -1}}))
 }
@@ -97,5 +98,5 @@ func (r *MedicalRecordRepository) Delete(ctx context.Context, id primitive.Objec
 }
 
 func (r *MedicalRecordRepository) Count(ctx context.Context) (int64, error) {
-	return r.collection.CountDocuments(ctx, bson.M{})
+	return r.collection.CountDocuments(ctx, bson.M{"isDeleted": bson.M{"$ne": true}})
 }

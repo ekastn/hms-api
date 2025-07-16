@@ -14,6 +14,9 @@ import (
 )
 
 func main() {
+	// NOTE: This seeder is for development purposes only.
+	// The initial admin user is now created on application startup.
+
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatal("Error loading .env file")

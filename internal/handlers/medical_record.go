@@ -170,6 +170,11 @@ func (h *MedicalRecordHandler) Update(c *fiber.Ctx) error {
 		return utils.ErrorResponseJSON(c, fiber.StatusBadRequest, "Validation failed", validationErrors)
 	}
 
+	updaterID, err := primitive.ObjectIDFromHex(c.Locals("userID").(string))
+	if err != nil {
+		return utils.ErrorResponseJSON(c, fiber.StatusInternalServerError, "Invalid user ID", nil)
+	}
+
 	existingRecord, err := h.recordService.GetByID(c.Context(), id)
 	if err != nil {
 		log.Printf("Error getting medical record: %v", err)
@@ -198,7 +203,7 @@ func (h *MedicalRecordHandler) Update(c *fiber.Ctx) error {
 
 	existingRecord.UpdatedAt = time.Now()
 
-	if err := h.recordService.Update(c.Context(), id, existingRecord); err != nil {
+	if err := h.recordService.Update(c.Context(), id, existingRecord, updaterID); err != nil {
 		log.Printf("Error updating medical record: %v", err)
 		return utils.ErrorResponseJSON(c, fiber.StatusInternalServerError, "Failed to update medical record", nil)
 	}
@@ -212,7 +217,12 @@ func (h *MedicalRecordHandler) Delete(c *fiber.Ctx) error {
 		return utils.ResponseJSON(c, fiber.StatusBadRequest, "Record ID is required", nil)
 	}
 
-	if err := h.recordService.Delete(c.Context(), id); err != nil {
+	updaterID, err := primitive.ObjectIDFromHex(c.Locals("userID").(string))
+	if err != nil {
+		return utils.ErrorResponseJSON(c, fiber.StatusInternalServerError, "Invalid user ID", nil)
+	}
+
+	if err := h.recordService.Delete(c.Context(), id, updaterID); err != nil {
 		log.Printf("Error deleting medical record: %v", err)
 		return utils.ErrorResponseJSON(c, fiber.StatusInternalServerError, "Failed to delete medical record", nil)
 	}

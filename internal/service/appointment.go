@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/ekastn/hms-api/internal/domain"
@@ -13,11 +14,11 @@ import (
 )
 
 type AppointmentService struct {
-	appRepo     *repository.AppointmentRepository
-	patientRepo *repository.PatientRepository
-	recordRepo  *repository.MedicalRecordRepository
+	appRepo         *repository.AppointmentRepository
+	patientRepo     *repository.PatientRepository
+	recordRepo      *repository.MedicalRecordRepository
 	activityService *ActivityService
-	mongoClient *mongo.Client
+	mongoClient     *mongo.Client
 }
 
 func NewAppointmentService(
@@ -28,11 +29,11 @@ func NewAppointmentService(
 	mongoClient *mongo.Client,
 ) *AppointmentService {
 	return &AppointmentService{
-		appRepo:     repo,
-		patientRepo: patientRepo,
-		recordRepo:  recordRepo,
+		appRepo:         repo,
+		patientRepo:     patientRepo,
+		recordRepo:      recordRepo,
 		activityService: activityService,
-		mongoClient: mongoClient,
+		mongoClient:     mongoClient,
 	}
 }
 
@@ -90,7 +91,7 @@ func (s *AppointmentService) GetAppointmentDetail(ctx context.Context, id string
 	return appointment.ToDetailDTO(patient, lastRecord), nil
 }
 
-func (s *AppointmentService) Create(ctx context.Context, appointment *domain.AppointmentEntity) (string, error) {
+func (s *AppointmentService) Create(ctx context.Context, appointment *domain.AppointmentEntity, creatorID primitive.ObjectID) (string, error) {
 	// Start a session for transaction
 	session, err := s.mongoClient.StartSession()
 	if err != nil {
@@ -168,6 +169,10 @@ func (s *AppointmentService) Create(ctx context.Context, appointment *domain.App
 			return errors.New("doctor is not available at the requested time")
 		}
 
+		// Set audit fields
+		appointment.CreatedBy = creatorID
+		appointment.UpdatedBy = creatorID
+
 		// Create the appointment
 		id, err := s.appRepo.Create(sessionContext, appointment)
 		if err != nil {
@@ -184,7 +189,6 @@ func (s *AppointmentService) Create(ctx context.Context, appointment *domain.App
 
 		return session.CommitTransaction(sessionContext)
 	})
-
 	if err != nil {
 		session.AbortTransaction(ctx)
 		return "", err
@@ -193,7 +197,7 @@ func (s *AppointmentService) Create(ctx context.Context, appointment *domain.App
 	return newAppointmentID, nil
 }
 
-func (s *AppointmentService) Update(ctx context.Context, id string, appointment *domain.AppointmentEntity) error {
+func (s *AppointmentService) Update(ctx context.Context, id string, appointment *domain.AppointmentEntity, updaterID primitive.ObjectID) error {
 	appointmentID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return fmt.Errorf("invalid ID format: %w", err)
@@ -230,6 +234,7 @@ func (s *AppointmentService) Update(ctx context.Context, id string, appointment 
 		appointment.ID = appointmentID
 		appointment.CreatedAt = existingAppointment.CreatedAt
 		appointment.UpdatedAt = time.Now()
+		appointment.UpdatedBy = updaterID
 
 		// If date/time or doctor is being changed, check for conflicts
 		if !appointment.DateTime.Equal(existingAppointment.DateTime) ||
@@ -272,7 +277,6 @@ func (s *AppointmentService) Update(ctx context.Context, id string, appointment 
 
 		return session.CommitTransaction(sessionContext)
 	})
-
 	if err != nil {
 		session.AbortTransaction(ctx)
 		return err
@@ -281,7 +285,7 @@ func (s *AppointmentService) Update(ctx context.Context, id string, appointment 
 	return nil
 }
 
-func (s *AppointmentService) Delete(ctx context.Context, id string) error {
+func (s *AppointmentService) Delete(ctx context.Context, id string, updaterID primitive.ObjectID) error {
 	appointmentID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return fmt.Errorf("invalid ID format: %w", err)
@@ -304,6 +308,7 @@ func (s *AppointmentService) Delete(ctx context.Context, id string) error {
 
 	// Instead of deleting, we'll mark it as cancelled
 	existingAppointment.Status = domain.AppointmentStatusCancelled
+	existingAppointment.UpdatedBy = updaterID
 	err = s.appRepo.Update(ctx, appointmentID, existingAppointment)
 	if err != nil {
 		return fmt.Errorf("failed to cancel appointment: %w", err)
@@ -312,7 +317,7 @@ func (s *AppointmentService) Delete(ctx context.Context, id string) error {
 	err = s.activityService.CreateActivity(ctx, domain.ActivityTypeAppointment, "Appointment Cancelled", fmt.Sprintf("Appointment %s has been cancelled.", id))
 	if err != nil {
 		// Log the error but don't block the appointment cancellation
-		fmt.Printf("Warning: failed to log activity for appointment cancellation: %v\n", err)
+		log.Printf("Warning: failed to log activity for appointment cancellation: %v", err)
 	}
 
 	return nil

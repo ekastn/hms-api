@@ -33,6 +33,10 @@ type MedicalRecordEntity struct {
 	Diagnosis   string             `bson:"diagnosis"`
 	Treatment   string             `bson:"treatment"`
 	Notes       string             `bson:"notes,omitempty"`
+	CreatedBy   primitive.ObjectID `bson:"createdBy"`
+	UpdatedBy   primitive.ObjectID `bson:"updatedBy"`
+	IsDeleted   bool               `bson:"isDeleted"`
+	DeletedAt   *time.Time         `bson:"deletedAt,omitempty"`
 	CreatedAt   time.Time          `bson:"createdAt"`
 	UpdatedAt   time.Time          `bson:"updatedAt"`
 }

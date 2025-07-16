@@ -80,7 +80,7 @@ func (s *DoctorService) GetDoctorDetail(ctx context.Context, id string) (*domain
 	return doctor.ToDetailDTO(recentPatients), nil
 }
 
-func (s *DoctorService) Create(ctx context.Context, doctor *domain.DoctorEntity) (string, error) {
+func (s *DoctorService) Create(ctx context.Context, doctor *domain.DoctorEntity, creatorID primitive.ObjectID) (string, error) {
 	// Validate required fields
 	if doctor.Name == "" || doctor.Specialty == "" || doctor.Phone == "" || doctor.Email == "" {
 		return "", fmt.Errorf("all fields are required")
@@ -95,6 +95,8 @@ func (s *DoctorService) Create(ctx context.Context, doctor *domain.DoctorEntity)
 	now := time.Now()
 	doctor.CreatedAt = now
 	doctor.UpdatedAt = now
+	doctor.CreatedBy = creatorID
+	doctor.UpdatedBy = creatorID
 
 	// Create doctor
 	id, err := s.doctorRepo.Create(ctx, doctor)
@@ -111,7 +113,7 @@ func (s *DoctorService) Create(ctx context.Context, doctor *domain.DoctorEntity)
 	return id.Hex(), nil
 }
 
-func (s *DoctorService) Update(ctx context.Context, id string, doctor *domain.DoctorEntity) error {
+func (s *DoctorService) Update(ctx context.Context, id string, doctor *domain.DoctorEntity, updaterID primitive.ObjectID) error {
 	if id == "" {
 		return fmt.Errorf("doctor ID is required")
 	}
@@ -143,6 +145,8 @@ func (s *DoctorService) Update(ctx context.Context, id string, doctor *domain.Do
 	// Preserve created_at and update updated_at
 	doctor.CreatedAt = existing.CreatedAt
 	doctor.UpdatedAt = time.Now()
+	doctor.CreatedBy = existing.CreatedBy
+	doctor.UpdatedBy = updaterID
 
 	if err := s.doctorRepo.Update(ctx, docID, doctor); err != nil {
 		return fmt.Errorf("failed to update doctor: %w", err)

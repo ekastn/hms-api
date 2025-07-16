@@ -8,6 +8,7 @@ import (
 	"github.com/ekastn/hms-api/internal/service"
 	"github.com/ekastn/hms-api/internal/utils"
 	"github.com/gofiber/fiber/v2"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type PatientHandler struct {
@@ -110,6 +111,11 @@ func (h *PatientHandler) Update(c *fiber.Ctx) error {
 		return utils.ErrorResponseJSON(c, fiber.StatusBadRequest, "Validation failed", validationErrors)
 	}
 
+	updaterID, err := primitive.ObjectIDFromHex(c.Locals("userID").(string))
+	if err != nil {
+		return utils.ErrorResponseJSON(c, fiber.StatusInternalServerError, "Invalid user ID", nil)
+	}
+
 	// Convert request to entity
 	patientEntity := domain.PatientEntity{
 		Name:    req.Name,
@@ -120,7 +126,7 @@ func (h *PatientHandler) Update(c *fiber.Ctx) error {
 		Address: req.Address,
 	}
 
-	err := h.patientService.Update(c.Context(), id, &patientEntity)
+	err = h.patientService.Update(c.Context(), id, &patientEntity, updaterID)
 	if err != nil {
 		return utils.ErrorResponseJSON(c, fiber.StatusInternalServerError, err.Error(), nil)
 	}
@@ -131,7 +137,12 @@ func (h *PatientHandler) Update(c *fiber.Ctx) error {
 func (h *PatientHandler) Delete(c *fiber.Ctx) error {
 	id := c.Params("id")
 
-	err := h.patientService.Delete(c.Context(), id)
+	updaterID, err := primitive.ObjectIDFromHex(c.Locals("userID").(string))
+	if err != nil {
+		return utils.ErrorResponseJSON(c, fiber.StatusInternalServerError, "Invalid user ID", nil)
+	}
+
+	err = h.patientService.Delete(c.Context(), id, updaterID)
 	if err != nil {
 		return utils.ErrorResponseJSON(c, fiber.StatusInternalServerError, err.Error(), nil)
 	}

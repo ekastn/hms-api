@@ -68,11 +68,11 @@ func (r *PatientRepository) GetByName(ctx context.Context, name string) (*domain
 }
 
 func (r *PatientRepository) Count(ctx context.Context) (int64, error) {
-	return r.coll.CountDocuments(ctx, bson.M{})
+	return r.coll.CountDocuments(ctx, bson.M{"isDeleted": bson.M{"$ne": true}})
 }
 
 func (r *PatientRepository) GetAll(ctx context.Context) ([]*domain.PatientEntity, error) {
-	cur, err := r.coll.Find(ctx, bson.D{})
+	cur, err := r.coll.Find(ctx, bson.M{"isDeleted": bson.M{"$ne": true}})
 	if err != nil {
 		return nil, err
 	}

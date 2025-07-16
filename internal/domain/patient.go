@@ -15,6 +15,10 @@ type PatientEntity struct {
 	Email     string             `bson:"email"`
 	Address   string             `bson:"address"`
 	LastVisit time.Time          `bson:"lastVisit"`
+	CreatedBy primitive.ObjectID `bson:"createdBy"`
+	UpdatedBy primitive.ObjectID `bson:"updatedBy"`
+	IsDeleted bool               `bson:"isDeleted"`
+	DeletedAt *time.Time         `bson:"deletedAt,omitempty"`
 	CreatedAt time.Time          `bson:"createdAt"`
 	UpdatedAt time.Time          `bson:"updatedAt"`
 }

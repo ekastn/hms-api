@@ -13,6 +13,10 @@ type DoctorEntity struct {
 	Phone        string             `bson:"phone"`
 	Email        string             `bson:"email"`
 	Availability []TimeSlot         `bson:"availability"`
+	CreatedBy    primitive.ObjectID `bson:"createdBy"`
+	UpdatedBy    primitive.ObjectID `bson:"updatedBy"`
+	IsDeleted    bool               `bson:"isDeleted"`
+	DeletedAt    *time.Time         `bson:"deletedAt,omitempty"`
 	CreatedAt    time.Time          `bson:"createdAt"`
 	UpdatedAt    time.Time          `bson:"updatedAt"`
 }

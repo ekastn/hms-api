@@ -117,7 +117,7 @@ func (s *PatientService) Create(ctx context.Context, patient *domain.PatientEnti
 	return id.Hex(), nil
 }
 
-func (s *PatientService) Update(ctx context.Context, id string, patient *domain.PatientEntity) error {
+func (s *PatientService) Update(ctx context.Context, id string, patient *domain.PatientEntity, updaterID primitive.ObjectID) error {
 	if id == "" {
 		return errors.New("patient ID is required")
 	}
@@ -144,6 +144,8 @@ func (s *PatientService) Update(ctx context.Context, id string, patient *domain.
 	// Preserve created_at and set updated_at
 	patient.CreatedAt = existingPatient.CreatedAt
 	patient.UpdatedAt = time.Now()
+	patient.CreatedBy = existingPatient.CreatedBy
+	patient.UpdatedBy = updaterID
 	patient.ID = patientID
 
 	// Update patient in repository
@@ -173,17 +175,20 @@ func validatePatientFields(patient *domain.PatientEntity) error {
 	return nil
 }
 
-func (s *PatientService) Delete(ctx context.Context, id string) error {
+func (s *PatientService) Delete(ctx context.Context, id string, updaterID primitive.ObjectID) error {
 	patientID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return fmt.Errorf("invalid ID format: %w", err)
 	}
 
 	// Check if patient exists
-	_, err = s.docRepo.GetByID(ctx, patientID)
+	existingPatient, err := s.docRepo.GetByID(ctx, patientID)
 	if err != nil {
 		return fmt.Errorf("failed to get patient: %w", err)
 	}
+
+	// Set UpdatedBy before soft deleting
+	existingPatient.UpdatedBy = updaterID
 
 	// Delete patient from repository
 	if err := s.docRepo.Delete(ctx, patientID); err != nil {

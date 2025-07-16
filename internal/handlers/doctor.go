@@ -8,6 +8,7 @@ import (
 	"github.com/ekastn/hms-api/internal/service"
 	"github.com/ekastn/hms-api/internal/utils"
 	"github.com/gofiber/fiber/v2"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type DoctorHandler struct {
@@ -76,6 +77,11 @@ func (h *DoctorHandler) Create(c *fiber.Ctx) error {
 		return utils.ErrorResponseJSON(c, fiber.StatusBadRequest, "Validation failed", validationErrors)
 	}
 
+	creatorID, err := primitive.ObjectIDFromHex(c.Locals("userID").(string))
+	if err != nil {
+		return utils.ErrorResponseJSON(c, fiber.StatusInternalServerError, "Invalid user ID", nil)
+	}
+
 	// Convert request to entity
 	docEntity := domain.DoctorEntity{
 		Name:         req.Name,
@@ -87,7 +93,7 @@ func (h *DoctorHandler) Create(c *fiber.Ctx) error {
 		UpdatedAt:    time.Now(),
 	}
 
-	id, err := h.docService.Create(c.Context(), &docEntity)
+	id, err := h.docService.Create(c.Context(), &docEntity, creatorID)
 	if err != nil {
 		return utils.ErrorResponseJSON(c, fiber.StatusInternalServerError, err.Error(), nil)
 	}
@@ -109,6 +115,11 @@ func (h *DoctorHandler) Update(c *fiber.Ctx) error {
 		return utils.ErrorResponseJSON(c, fiber.StatusBadRequest, "Validation failed", validationErrors)
 	}
 
+	updaterID, err := primitive.ObjectIDFromHex(c.Locals("userID").(string))
+	if err != nil {
+		return utils.ErrorResponseJSON(c, fiber.StatusInternalServerError, "Invalid user ID", nil)
+	}
+
 	// Get existing doctor to preserve some fields
 	existingDoc, err := h.docService.GetByID(c.Context(), id)
 	if err != nil {
@@ -126,7 +137,7 @@ func (h *DoctorHandler) Update(c *fiber.Ctx) error {
 		UpdatedAt:    time.Now(),               // Update updated at
 	}
 
-	err = h.docService.Update(c.Context(), id, &docEntity)
+	err = h.docService.Update(c.Context(), id, &docEntity, updaterID)
 	if err != nil {
 		return utils.ErrorResponseJSON(c, fiber.StatusInternalServerError, err.Error(), nil)
 	}

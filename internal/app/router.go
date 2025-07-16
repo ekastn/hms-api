@@ -1,6 +1,7 @@
 package app
 
 import (
+	"github.com/ekastn/hms-api/internal/domain"
 	"github.com/ekastn/hms-api/internal/handlers"
 	"github.com/ekastn/hms-api/internal/repository"
 	"github.com/ekastn/hms-api/internal/service"
@@ -14,6 +15,7 @@ func (a *App) setupRoutes() {
 	appointmentRepo := repository.NewAppointmentRepository(a.db.Collection("appointments"))
 	medicalRecordRepo := repository.NewMedicalRecordRepository(a.db.Collection("medical_records"))
 	activityRepo := repository.NewActivityRepository(a.db.Collection("activities"))
+	userRepo := repository.NewUserRepository(a.db.Collection("users"))
 
 	// Initialize services
 	activityService := service.NewActivityService(activityRepo)
@@ -44,6 +46,8 @@ func (a *App) setupRoutes() {
 		medicalRecordRepo,
 		activityRepo,
 	)
+	authService := service.NewAuthService(userRepo, a.cfg.jwtSecret)
+	userService := service.NewUserService(userRepo)
 
 	// Initialize handlers
 	patientHandler := handlers.NewPatientHandler(patientService)
@@ -51,43 +55,60 @@ func (a *App) setupRoutes() {
 	appointmentHandler := handlers.NewAppointmentHandler(appointmentService)
 	medicalRecordHandler := handlers.NewMedicalRecordHandler(medicalRecordService)
 	dashboardHandler := handlers.NewDashboardHandler(dashboardService)
+	authHandler := handlers.NewAuthHandler(authService)
+	userHandler := handlers.NewUserHandler(userService, authService)
 
 	api := a.f.Group("/api")
 
+	// Auth routes
+	auth := api.Group("/auth")
+	auth.Post("/login", authHandler.Login)
+
+	// Middleware
+	jwt := JWTMiddleware(a.cfg.jwtSecret)
+
+	// User management routes (Admin only)
+	users := api.Group("/users", jwt, RBACMiddleware(domain.RoleAdmin))
+	users.Get("/", userHandler.HandleGetAllUsers)
+	users.Post("/", userHandler.HandleCreateUser)
+	users.Get("/:id", userHandler.HandleGetUserByID)
+	users.Put("/:id", userHandler.HandleUpdateUser)
+	users.Delete("/:id", userHandler.HandleDeactivateUser)
+
 	// Dashboard routes
-	dashboard := api.Group("/dashboard")
+	dashboard := api.Group("/dashboard", jwt, RBACMiddleware(domain.RoleAdmin, domain.RoleManagement))
 	dashboard.Get("/", dashboardHandler.GetDashboardData)
 
-	patients := api.Group("/patients")
-	patients.Get("/", patientHandler.GetAll)
-	patients.Get("/:id", patientHandler.GetByID)
-	patients.Get("/:id/detail", patientHandler.GetPatientDetail) // New endpoint for detailed patient info
-	patients.Post("/", patientHandler.Create)
-	patients.Put("/:id", patientHandler.Update)
-	patients.Delete("/:id", patientHandler.Delete)
+	patients := api.Group("/patients", jwt)
+	patients.Get("/", RBACMiddleware(domain.RoleAdmin, domain.RoleDoctor, domain.RoleNurse, domain.RoleReceptionist, domain.RoleManagement), patientHandler.GetAll)
+	patients.Get("/:id", RBACMiddleware(domain.RoleAdmin, domain.RoleDoctor, domain.RoleNurse, domain.RoleReceptionist, domain.RoleManagement), patientHandler.GetByID)
+	patients.Get("/:id/detail", RBACMiddleware(domain.RoleAdmin, domain.RoleDoctor, domain.RoleNurse, domain.RoleReceptionist, domain.RoleManagement), patientHandler.GetPatientDetail) // New endpoint for detailed patient info
+	patients.Post("/", RBACMiddleware(domain.RoleAdmin, domain.RoleReceptionist), patientHandler.Create)
+	patients.Put("/:id", RBACMiddleware(domain.RoleAdmin, domain.RoleReceptionist), patientHandler.Update)
+	patients.Delete("/:id", RBACMiddleware(domain.RoleAdmin), patientHandler.Delete)
 
-	doctors := api.Group("/doctors")
-	doctors.Get("/", docHandler.GetAll)
-	doctors.Get("/:id", docHandler.GetByID)
-	doctors.Get("/:id/detail", docHandler.GetDoctorDetail) // New endpoint for detailed doctor info
-	doctors.Post("/", docHandler.Create)
-	doctors.Put("/:id", docHandler.Update)
-	doctors.Delete("/:id", docHandler.Delete)
+	doctors := api.Group("/doctors", jwt)
+	doctors.Get("/", RBACMiddleware(domain.RoleAdmin, domain.RoleManagement), docHandler.GetAll)
+	doctors.Get("/:id", RBACMiddleware(domain.RoleAdmin, domain.RoleManagement), docHandler.GetByID)
+	doctors.Get("/:id/detail", RBACMiddleware(domain.RoleAdmin, domain.RoleManagement), docHandler.GetDoctorDetail) // New endpoint for detailed doctor info
+	doctors.Post("/", RBACMiddleware(domain.RoleAdmin), docHandler.Create)
+	doctors.Put("/:id", RBACMiddleware(domain.RoleAdmin), docHandler.Update)
+	doctors.Delete("/:id", RBACMiddleware(domain.RoleAdmin), docHandler.Delete)
 
-	appointments := api.Group("/appointments")
-	appointments.Get("/", appointmentHandler.GetAll)
-	appointments.Get("/:id", appointmentHandler.GetByID)
-	appointments.Get("/:id/detail", appointmentHandler.GetAppointmentDetail) // New endpoint for detailed appointment info
-	appointments.Post("/", appointmentHandler.Create)
-	appointments.Put("/:id", appointmentHandler.Update)
-	appointments.Delete("/:id", appointmentHandler.Delete)
+	appointments := api.Group("/appointments", jwt)
+	appointments.Get("/", RBACMiddleware(domain.RoleAdmin, domain.RoleDoctor, domain.RoleNurse, domain.RoleReceptionist, domain.RoleManagement), appointmentHandler.GetAll)
+	appointments.Get("/:id", RBACMiddleware(domain.RoleAdmin, domain.RoleDoctor, domain.RoleNurse, domain.RoleReceptionist, domain.RoleManagement), appointmentHandler.GetByID)
+	appointments.Get("/:id/detail", RBACMiddleware(domain.RoleAdmin, domain.RoleDoctor, domain.RoleNurse, domain.RoleReceptionist, domain.RoleManagement), appointmentHandler.GetAppointmentDetail) // New endpoint for detailed appointment info
+	appointments.Post("/", RBACMiddleware(domain.RoleAdmin, domain.RoleDoctor, domain.RoleNurse, domain.RoleReceptionist), appointmentHandler.Create)
+	appointments.Put("/:id", RBACMiddleware(domain.RoleAdmin, domain.RoleDoctor, domain.RoleNurse, domain.RoleReceptionist), appointmentHandler.Update)
+	appointments.Delete("/:id", RBACMiddleware(domain.RoleAdmin, domain.RoleDoctor, domain.RoleNurse, domain.RoleReceptionist), appointmentHandler.Delete)
 
-	records := api.Group("/records")
-	records.Get("/", medicalRecordHandler.GetAll)
-	records.Get("/:id", medicalRecordHandler.GetByID)
-	records.Post("/", medicalRecordHandler.Create)
-	records.Put("/:id", medicalRecordHandler.Update)
-	records.Delete("/:id", medicalRecordHandler.Delete)
+	records := api.Group("/records", jwt)
+	records.Get("/", RBACMiddleware(domain.RoleAdmin, domain.RoleDoctor, domain.RoleNurse, domain.RoleManagement), medicalRecordHandler.GetAll)
+	records.Get("/:id", RBACMiddleware(domain.RoleAdmin, domain.RoleDoctor, domain.RoleNurse, domain.RoleManagement), medicalRecordHandler.GetByID)
+	records.Post("/", RBACMiddleware(domain.RoleAdmin, domain.RoleDoctor), medicalRecordHandler.Create)
+	records.Put("/:id", RBACMiddleware(domain.RoleAdmin, domain.RoleDoctor), medicalRecordHandler.Update)
+	records.Delete("/:id", RBACMiddleware(domain.RoleAdmin), medicalRecordHandler.Delete)
 
 	// Health check route
 	api.Get("/", func(c *fiber.Ctx) error {

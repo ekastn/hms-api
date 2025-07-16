@@ -7,6 +7,7 @@ import (
 	"github.com/ekastn/hms-api/internal/service"
 	"github.com/ekastn/hms-api/internal/utils"
 	"github.com/gofiber/fiber/v2"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type AppointmentHandler struct {
@@ -84,6 +85,11 @@ func (h *AppointmentHandler) Create(c *fiber.Ctx) error {
 		return utils.ErrorResponseJSON(c, fiber.StatusBadRequest, "Validation failed", validationErrors)
 	}
 
+	creatorID, err := primitive.ObjectIDFromHex(c.Locals("userID").(string))
+	if err != nil {
+		return utils.ErrorResponseJSON(c, fiber.StatusInternalServerError, "Invalid user ID", nil)
+	}
+
 	// Convert DTO to Entity
 	appointment, err := body.ToEntity()
 	if err != nil {
@@ -92,7 +98,7 @@ func (h *AppointmentHandler) Create(c *fiber.Ctx) error {
 	}
 
 	// Create the appointment
-	id, err := h.appointmentService.Create(c.Context(), &appointment)
+	id, err := h.appointmentService.Create(c.Context(), &appointment, creatorID)
 	if err != nil {
 		log.Printf("Error creating appointment: %v", err)
 		return utils.ErrorResponseJSON(c, fiber.StatusInternalServerError, err.Error(), nil)
@@ -117,13 +123,18 @@ func (h *AppointmentHandler) Update(c *fiber.Ctx) error {
 		return utils.ErrorResponseJSON(c, fiber.StatusBadRequest, "Validation failed", validationErrors)
 	}
 
+	updaterID, err := primitive.ObjectIDFromHex(c.Locals("userID").(string))
+	if err != nil {
+		return utils.ErrorResponseJSON(c, fiber.StatusInternalServerError, "Invalid user ID", nil)
+	}
+
 	appointment, err := body.ToEntity()
 	if err != nil {
 		log.Printf("Error converting DTO to entity: %v", err)
 		return utils.ErrorResponseJSON(c, fiber.StatusBadRequest, err.Error(), nil)
 	}
 
-	err = h.appointmentService.Update(c.Context(), id, &appointment)
+	err = h.appointmentService.Update(c.Context(), id, &appointment, updaterID)
 	if err != nil {
 		log.Printf("Error updating appointment: %v", err)
 		return utils.ErrorResponseJSON(c, fiber.StatusInternalServerError, err.Error(), nil)
@@ -138,7 +149,12 @@ func (h *AppointmentHandler) Delete(c *fiber.Ctx) error {
 		return utils.ResponseJSON(c, fiber.StatusBadRequest, "Appointment ID is required", nil)
 	}
 
-	err := h.appointmentService.Delete(c.Context(), id)
+	updaterID, err := primitive.ObjectIDFromHex(c.Locals("userID").(string))
+	if err != nil {
+		return utils.ErrorResponseJSON(c, fiber.StatusInternalServerError, "Invalid user ID", nil)
+	}
+
+	err = h.appointmentService.Delete(c.Context(), id, updaterID)
 	if err != nil {
 		log.Printf("Error deleting appointment %s: %v", id, err)
 		return utils.ErrorResponseJSON(c, fiber.StatusInternalServerError, err.Error(), nil)

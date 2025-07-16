@@ -78,10 +78,7 @@ func (r *AppointmentRepository) Update(ctx context.Context, id primitive.ObjectI
 	return err
 }
 
-func (r *AppointmentRepository) Delete(ctx context.Context, id primitive.ObjectID) error {
-	_, err := r.coll.DeleteOne(ctx, bson.M{"_id": id})
-	return err
-}
+
 
 func (r *AppointmentRepository) GetUpcomingAppointments(ctx context.Context, limit int) ([]*domain.UpcomingAppointment, error) {
 	now := time.Now()

@@ -93,7 +93,7 @@ func (s *MedicalRecordService) GetByDateRange(ctx context.Context, start, end ti
 	return records, nil
 }
 
-func (s *MedicalRecordService) Update(ctx context.Context, id string, record *domain.MedicalRecordEntity) error {
+func (s *MedicalRecordService) Update(ctx context.Context, id string, record *domain.MedicalRecordEntity, updaterID primitive.ObjectID) error {
 	recordID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return fmt.Errorf("invalid ID format: %w", err)
@@ -105,7 +105,19 @@ func (s *MedicalRecordService) Update(ctx context.Context, id string, record *do
 		return err
 	}
 
+	existingRecord, err := s.recordRepo.FindByID(ctx, recordID)
+	if err != nil {
+		return fmt.Errorf("failed to get medical record: %w", err)
+	}
+
+	if existingRecord == nil {
+		return errors.New("medical record not found")
+	}
+
 	record.UpdatedAt = time.Now()
+	record.CreatedAt = existingRecord.CreatedAt
+	record.CreatedBy = existingRecord.CreatedBy
+	record.UpdatedBy = updaterID
 
 	if err := s.recordRepo.Update(ctx, recordID, record); err != nil {
 		return fmt.Errorf("failed to update medical record: %w", err)
@@ -120,7 +132,7 @@ func (s *MedicalRecordService) Update(ctx context.Context, id string, record *do
 	return nil
 }
 
-func (s *MedicalRecordService) Delete(ctx context.Context, id string) error {
+func (s *MedicalRecordService) Delete(ctx context.Context, id string, updaterID primitive.ObjectID) error {
 	recordID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return fmt.Errorf("invalid ID format: %w", err)
@@ -135,6 +147,9 @@ func (s *MedicalRecordService) Delete(ctx context.Context, id string) error {
 	if existingRecord == nil {
 		return errors.New("medical record not found")
 	}
+
+	// Set UpdatedBy before soft deleting
+	existingRecord.UpdatedBy = updaterID
 
 	if err := s.recordRepo.Delete(ctx, recordID); err != nil {
 		return fmt.Errorf("failed to delete medical record: %w", err)

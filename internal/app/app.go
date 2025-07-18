@@ -1,22 +1,17 @@
 package app
 
 import (
-	"context"
 	"log"
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
-	"github.com/joho/godotenv"
 
 	"github.com/ekastn/hms-api/internal/env"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
-	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
 
 type App struct {
@@ -70,41 +65,4 @@ func (a *App) mount() {
 	}))
 
 	a.f = app
-}
-
-func (a *App) connectDb() {
-	log.Println("connecting to database", a.cfg.mongoCfg.addr)
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	client, err := mongo.Connect(ctx,
-		options.Client().ApplyURI(a.cfg.mongoCfg.addr))
-	if err != nil {
-		panic(err)
-	}
-
-	err = client.Ping(ctx, readpref.Primary())
-	if err != nil {
-		log.Fatal(err)
-	}
-	log.Println("database ping")
-
-	a.db = client.Database(a.cfg.mongoCfg.db)
-}
-
-func (a *App) loadConfig() {
-	err := godotenv.Load()
-	if err != nil {
-		log.Println("No .env file found")
-	}
-
-	cfg := config{
-		addr: env.GetString("APP_ADDR", ":3000"),
-		mongoCfg: mongoDbCfg{
-			addr:      env.GetString("MONGO_ADDR", "mongodb://localhost:27017"),
-			db:        env.GetString("MONGO_DB", "hms"),
-		},
-		jwtSecret: env.GetString("JWT_SECRET", "your-secret-key"),
-	}
-
-	a.cfg = cfg
 }

@@ -13,13 +13,13 @@ import (
 )
 
 type MedicalRecordService struct {
-	recordRepo *repository.MedicalRecordRepository
+	recordRepo      *repository.MedicalRecordRepository
 	activityService *ActivityService
 }
 
 func NewMedicalRecordService(recordRepo *repository.MedicalRecordRepository, activityService *ActivityService) *MedicalRecordService {
 	return &MedicalRecordService{
-		recordRepo: recordRepo,
+		recordRepo:      recordRepo,
 		activityService: activityService,
 	}
 }
@@ -98,8 +98,6 @@ func (s *MedicalRecordService) Update(ctx context.Context, id string, record *do
 	if err != nil {
 		return fmt.Errorf("invalid ID format: %w", err)
 	}
-
-	
 
 	if err := validateMedicalRecord(record); err != nil {
 		return err

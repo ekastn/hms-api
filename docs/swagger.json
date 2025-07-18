@@ -1,0 +1,2641 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "This is the API documentation for the Hospital Management System.",
+        "title": "HMS API Documentation",
+        "termsOfService": "http://swagger.io/terms/",
+        "contact": {
+            "name": "API Support",
+            "url": "https://github.com/ekastn",
+            "email": "eka@voixes.studio"
+        },
+        "license": {
+            "name": "Apache 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+        },
+        "version": "1.0"
+    },
+    "host": "localhost:5021",
+    "basePath": "/api",
+    "paths": {
+        "/appointments": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieve a list of all appointments.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Appointments"
+                ],
+                "summary": "Get all appointments",
+                "responses": {
+                    "200": {
+                        "description": "List of appointments",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/domain.AppointmentDTO"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to retrieve appointments",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Create a new appointment.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Appointments"
+                ],
+                "summary": "Create a new appointment",
+                "parameters": [
+                    {
+                        "description": "Appointment object to be created",
+                        "name": "appointment",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/domain.AppointmentDTO"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Appointment created successfully",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "string"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request body or validation failed",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to create appointment",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/appointments/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieve a single appointment by its ID.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Appointments"
+                ],
+                "summary": "Get appointment by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Appointment ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Appointment retrieved successfully",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.AppointmentDTO"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Appointment ID is required",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Appointment not found",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to retrieve appointment",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Update details of an existing appointment.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Appointments"
+                ],
+                "summary": "Update an existing appointment",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Appointment ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Appointment object with updated fields",
+                        "name": "appointment",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/domain.AppointmentDTO"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Appointment updated successfully",
+                        "schema": {
+                            "$ref": "#/definitions/utils.SuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request body or validation failed",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to update appointment",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Cancel an appointment (soft delete by changing status to 'Cancelled').",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Appointments"
+                ],
+                "summary": "Cancel an appointment",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Appointment ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Appointment cancelled successfully",
+                        "schema": {
+                            "$ref": "#/definitions/utils.SuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Appointment ID is required",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to cancel appointment",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/appointments/{id}/detail": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieve detailed information for a single appointment, including patient and medical history.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Appointments"
+                ],
+                "summary": "Get detailed appointment information",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Appointment ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Appointment details retrieved successfully",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.AppointmentDetailResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Appointment ID is required",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Appointment not found",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to retrieve appointment details",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/login": {
+            "post": {
+                "description": "Authenticate user and return JWT token.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "User login",
+                "parameters": [
+                    {
+                        "description": "User credentials",
+                        "name": "credentials",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/domain.LoginRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Login successful",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.LoginResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request body or validation failed",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid credentials",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/dashboard": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieve various statistics and recent activities for the dashboard. Admin or Management access required.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Dashboard"
+                ],
+                "summary": "Get dashboard data",
+                "responses": {
+                    "200": {
+                        "description": "Dashboard data retrieved successfully",
+                        "schema": {
+                            "$ref": "#/definitions/domain.DashboardResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to get dashboard data",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/doctors": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieve a list of all registered doctors.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Doctors"
+                ],
+                "summary": "Get all doctors",
+                "responses": {
+                    "200": {
+                        "description": "List of doctors",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/domain.DoctorDTO"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to retrieve doctors",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Create a new doctor entry.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Doctors"
+                ],
+                "summary": "Create a new doctor",
+                "parameters": [
+                    {
+                        "description": "Doctor object to be created",
+                        "name": "doctor",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/domain.CreateDoctorRequet"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Doctor created successfully",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "string"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request body or validation failed",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to create doctor",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/doctors/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieve a single doctor by their ID.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Doctors"
+                ],
+                "summary": "Get doctor by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Doctor ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Doctor details",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.DoctorDTO"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "404": {
+                        "description": "Doctor not found",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to retrieve doctor",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Update details of an existing doctor.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Doctors"
+                ],
+                "summary": "Update an existing doctor",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Doctor ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Doctor object with updated fields",
+                        "name": "doctor",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/domain.UpdateDoctorRequet"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Doctor updated successfully",
+                        "schema": {
+                            "$ref": "#/definitions/utils.SuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request body or validation failed",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Doctor not found",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to update doctor",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Delete a doctor entry.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Doctors"
+                ],
+                "summary": "Delete a doctor",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Doctor ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Doctor deleted successfully",
+                        "schema": {
+                            "$ref": "#/definitions/utils.SuccessResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to delete doctor",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/doctors/{id}/detail": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieve detailed information for a single doctor, including recent patients.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Doctors"
+                ],
+                "summary": "Get detailed doctor information",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Doctor ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Doctor details with recent patients",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.DoctorDetailResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "404": {
+                        "description": "Doctor not found",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to retrieve doctor details",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/health": {
+            "get": {
+                "description": "Checks if the server is healthy",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Health"
+                ],
+                "summary": "Health check endpoint",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/patients": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieve a list of all registered patients.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Patients"
+                ],
+                "summary": "Get all patients",
+                "responses": {
+                    "200": {
+                        "description": "List of patients",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/domain.PatientDTO"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to retrieve patients",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Create a new patient entry.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Patients"
+                ],
+                "summary": "Create a new patient",
+                "parameters": [
+                    {
+                        "description": "Patient object to be created",
+                        "name": "patient",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/domain.CreatePatientRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Patient created successfully",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "string"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request body or validation failed",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to create patient",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/patients/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieve a single patient by their ID.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Patients"
+                ],
+                "summary": "Get patient by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Patient ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Patient details",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.PatientDTO"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "404": {
+                        "description": "Patient not found",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to retrieve patient",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Update details of an existing patient.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Patients"
+                ],
+                "summary": "Update an existing patient",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Patient ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Patient object with updated fields",
+                        "name": "patient",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/domain.UpdatePatientRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Patient updated successfully",
+                        "schema": {
+                            "$ref": "#/definitions/utils.SuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request body or validation failed",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Patient not found",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to update patient",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Delete a patient entry.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Patients"
+                ],
+                "summary": "Delete a patient",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Patient ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Patient deleted successfully",
+                        "schema": {
+                            "$ref": "#/definitions/utils.SuccessResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to delete patient",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/patients/{id}/detail": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieve comprehensive information for a single patient, including recent appointments and medical history.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Patients"
+                ],
+                "summary": "Get detailed patient information",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Patient ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Patient details with appointments and medical history",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.PatientDetailResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "404": {
+                        "description": "Patient not found",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to retrieve patient details",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/records": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieve a list of all medical records.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Medical Records"
+                ],
+                "summary": "Get all medical records",
+                "responses": {
+                    "200": {
+                        "description": "Medical records retrieved successfully",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/domain.MedicalRecordDTO"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to get medical records",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Create a new medical record entry.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Medical Records"
+                ],
+                "summary": "Create a new medical record",
+                "parameters": [
+                    {
+                        "description": "Medical record object to be created",
+                        "name": "medicalRecord",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/domain.CreateMedicalRecordRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Medical record created",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "string"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request body or validation failed",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to create medical record",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/records/date-range": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieve a list of medical records within a specified date range.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Medical Records"
+                ],
+                "summary": "Get medical records by date range",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Start date (RFC3339 format)",
+                        "name": "start",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "End date (RFC3339 format)",
+                        "name": "end",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Medical records by date range",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/domain.MedicalRecordDTO"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Both start and end dates are required or invalid format",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to get medical records",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/records/patient/{patientId}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieve a list of medical records for a specific patient.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Medical Records"
+                ],
+                "summary": "Get medical records by patient ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Patient ID",
+                        "name": "patientId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Patient medical records",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/domain.MedicalRecordDTO"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Patient ID is required",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to get medical records",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/records/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieve a single medical record by its ID.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Medical Records"
+                ],
+                "summary": "Get medical record by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Medical Record ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Medical record details",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.MedicalRecordDTO"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Record ID is required",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Medical record not found",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to get medical record",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Update details of an existing medical record.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Medical Records"
+                ],
+                "summary": "Update an existing medical record",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Medical Record ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Medical record object with updated fields",
+                        "name": "medicalRecord",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/domain.UpdateMedicalRecordRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Medical record updated successfully",
+                        "schema": {
+                            "$ref": "#/definitions/utils.SuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request body or validation failed",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Medical record not found",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to update medical record",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Delete a medical record entry.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Medical Records"
+                ],
+                "summary": "Delete a medical record",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Medical Record ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Medical record deleted successfully",
+                        "schema": {
+                            "$ref": "#/definitions/utils.SuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Record ID is required",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to delete medical record",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/users": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Get a list of all registered users. Admin access required.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Get all users",
+                "responses": {
+                    "200": {
+                        "description": "Users retrieved successfully",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/domain.UserDTO"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to retrieve users",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Create a new user account. Admin access required.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Create a new user",
+                "parameters": [
+                    {
+                        "description": "User object to be created",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/domain.UserEntity"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "User created successfully",
+                        "schema": {
+                            "$ref": "#/definitions/utils.SuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request body",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to create user",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/users/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Get a single user by their ID. Admin access required.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Get user by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "User retrieved successfully",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/domain.UserDTO"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "404": {
+                        "description": "User not found",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to retrieve user",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Update details of an existing user. Admin access required.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Update an existing user",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "User object with updated fields",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/domain.UserEntity"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "User updated successfully",
+                        "schema": {
+                            "$ref": "#/definitions/utils.SuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request body",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to update user",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Deactivate a user account (soft delete). Admin access required.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Deactivate a user",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "User deactivated successfully",
+                        "schema": {
+                            "$ref": "#/definitions/utils.SuccessResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to deactivate user",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "domain.Activity": {
+            "description": "Activity log entry",
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "example": "Appointment for patient John Doe with doctor Jane Smith on 2025-07-17."
+                },
+                "id": {
+                    "type": "string",
+                    "example": "60d0fe4f53115a001f000001"
+                },
+                "timestamp": {
+                    "type": "string",
+                    "example": "2025-07-17T10:30:00Z"
+                },
+                "title": {
+                    "type": "string",
+                    "example": "New Appointment Scheduled"
+                },
+                "type": {
+                    "description": "e.g., \"APPOINTMENT\", \"MEDICAL_RECORD\"",
+                    "type": "string",
+                    "example": "APPOINTMENT"
+                }
+            }
+        },
+        "domain.AppointmentDTO": {
+            "type": "object",
+            "required": [
+                "dateTime",
+                "doctorId",
+                "duration",
+                "location",
+                "patientId",
+                "status",
+                "type"
+            ],
+            "properties": {
+                "createdAt": {
+                    "type": "string",
+                    "example": "2025-07-17T09:00:00Z"
+                },
+                "dateTime": {
+                    "type": "string",
+                    "example": "2025-07-17T10:00:00Z"
+                },
+                "doctorId": {
+                    "type": "string",
+                    "example": "60d0fe4f53115a001f000003"
+                },
+                "duration": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "60d0fe4f53115a001f000001"
+                },
+                "location": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 3,
+                    "example": "Room 101"
+                },
+                "notes": {
+                    "type": "string",
+                    "maxLength": 500,
+                    "example": "Patient complained of headache"
+                },
+                "patientHistory": {
+                    "type": "string",
+                    "maxLength": 1000,
+                    "example": "No significant medical history"
+                },
+                "patientId": {
+                    "type": "string",
+                    "example": "60d0fe4f53115a001f000002"
+                },
+                "status": {
+                    "enum": [
+                        "Scheduled",
+                        "Confirmed",
+                        "Completed",
+                        "Cancelled"
+                    ],
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/domain.AppointmentStatus"
+                        }
+                    ],
+                    "example": "Scheduled"
+                },
+                "type": {
+                    "enum": [
+                        "check-up",
+                        "follow-up",
+                        "consultation",
+                        "procedure",
+                        "emergency"
+                    ],
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/domain.AppointmentType"
+                        }
+                    ],
+                    "example": "check-up"
+                },
+                "updatedAt": {
+                    "type": "string",
+                    "example": "2025-07-17T09:00:00Z"
+                }
+            }
+        },
+        "domain.AppointmentDetailResponse": {
+            "description": "Detailed appointment information",
+            "type": "object",
+            "properties": {
+                "appointment": {
+                    "$ref": "#/definitions/domain.AppointmentDTO"
+                },
+                "lastRecord": {
+                    "$ref": "#/definitions/domain.MedicalRecordDTO"
+                },
+                "patient": {
+                    "$ref": "#/definitions/domain.PatientDTO"
+                }
+            }
+        },
+        "domain.AppointmentStatus": {
+            "type": "string",
+            "enum": [
+                "Scheduled",
+                "Confirmed",
+                "Completed",
+                "Cancelled"
+            ],
+            "x-enum-varnames": [
+                "AppointmentStatusScheduled",
+                "AppointmentStatusConfirmed",
+                "AppointmentStatusCompleted",
+                "AppointmentStatusCancelled"
+            ]
+        },
+        "domain.AppointmentType": {
+            "type": "string",
+            "enum": [
+                "check-up",
+                "follow-up",
+                "consultation",
+                "procedure",
+                "emergency"
+            ],
+            "x-enum-varnames": [
+                "AppointmentTypeCheckUp",
+                "AppointmentTypeFollowUp",
+                "AppointmentTypeConsultation",
+                "AppointmentTypeProcedure",
+                "AppointmentTypeEmergency"
+            ]
+        },
+        "domain.CreateDoctorRequet": {
+            "description": "Request body for creating a new doctor",
+            "type": "object",
+            "required": [
+                "email",
+                "name",
+                "phone",
+                "specialty"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "example": "jane.smith@example.com"
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 3,
+                    "example": "Dr. Jane Smith"
+                },
+                "phone": {
+                    "type": "string",
+                    "example": "+1987654321"
+                },
+                "specialty": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 3,
+                    "example": "Pediatrics"
+                }
+            }
+        },
+        "domain.CreateMedicalRecordRequest": {
+            "description": "Request body for creating a new medical record",
+            "type": "object",
+            "required": [
+                "description",
+                "diagnosis",
+                "doctorId",
+                "patientId",
+                "recordType",
+                "treatment"
+            ],
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "maxLength": 1000,
+                    "minLength": 10,
+                    "example": "Patient presented with flu-like symptoms."
+                },
+                "diagnosis": {
+                    "type": "string",
+                    "maxLength": 200,
+                    "minLength": 5,
+                    "example": "Influenza A"
+                },
+                "doctorId": {
+                    "type": "string",
+                    "example": "60d0fe4f53115a001f000003"
+                },
+                "notes": {
+                    "type": "string",
+                    "maxLength": 500,
+                    "example": "Advised patient to stay hydrated."
+                },
+                "patientId": {
+                    "type": "string",
+                    "example": "60d0fe4f53115a001f000002"
+                },
+                "recordType": {
+                    "type": "string",
+                    "enum": [
+                        "checkup",
+                        "followup",
+                        "procedure",
+                        "emergency"
+                    ],
+                    "example": "checkup"
+                },
+                "treatment": {
+                    "type": "string",
+                    "maxLength": 1000,
+                    "minLength": 5,
+                    "example": "Prescribed Tamiflu and rest."
+                }
+            }
+        },
+        "domain.CreatePatientRequest": {
+            "description": "Request body for creating a new patient",
+            "type": "object",
+            "required": [
+                "address",
+                "age",
+                "email",
+                "gender",
+                "name",
+                "phone"
+            ],
+            "properties": {
+                "address": {
+                    "type": "string",
+                    "maxLength": 200,
+                    "minLength": 10,
+                    "example": "123 Main St, Anytown, USA"
+                },
+                "age": {
+                    "type": "integer",
+                    "maximum": 120
+                },
+                "email": {
+                    "type": "string",
+                    "example": "john.doe@example.com"
+                },
+                "gender": {
+                    "type": "string",
+                    "enum": [
+                        "Male",
+                        "Female",
+                        "Other"
+                    ],
+                    "example": "Male"
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 3,
+                    "example": "John Doe"
+                },
+                "phone": {
+                    "type": "string",
+                    "example": "+1234567890"
+                }
+            }
+        },
+        "domain.DashboardResponse": {
+            "description": "Dashboard response containing statistics, recent activities, and upcoming appointments",
+            "type": "object",
+            "properties": {
+                "recentActivities": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/domain.Activity"
+                    }
+                },
+                "stats": {
+                    "$ref": "#/definitions/domain.DashboardStats"
+                },
+                "upcomingAppointments": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/domain.UpcomingAppointment"
+                    }
+                }
+            }
+        },
+        "domain.DashboardStats": {
+            "description": "Dashboard statistics",
+            "type": "object",
+            "properties": {
+                "appointmentsCount": {
+                    "type": "integer"
+                },
+                "doctorsCount": {
+                    "type": "integer"
+                },
+                "medicalRecordsCount": {
+                    "type": "integer"
+                },
+                "patientsCount": {
+                    "type": "integer"
+                }
+            }
+        },
+        "domain.DoctorDTO": {
+            "description": "Doctor data transfer object",
+            "type": "object",
+            "properties": {
+                "availability": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/domain.TimeSlot"
+                    }
+                },
+                "createdAt": {
+                    "type": "string",
+                    "example": "2025-07-17T09:00:00Z"
+                },
+                "email": {
+                    "type": "string",
+                    "example": "john.doe@example.com"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "60d0fe4f53115a001f000001"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Dr. John Doe"
+                },
+                "phone": {
+                    "type": "string",
+                    "example": "1234567890"
+                },
+                "specialty": {
+                    "type": "string",
+                    "example": "Cardiology"
+                },
+                "updatedAt": {
+                    "type": "string",
+                    "example": "2025-07-17T09:00:00Z"
+                }
+            }
+        },
+        "domain.DoctorDetailResponse": {
+            "description": "Detailed doctor information including recent patients",
+            "type": "object",
+            "properties": {
+                "doctor": {
+                    "$ref": "#/definitions/domain.DoctorDTO"
+                },
+                "recentPatients": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/domain.PatientDTO"
+                    }
+                }
+            }
+        },
+        "domain.LoginRequest": {
+            "type": "object",
+            "required": [
+                "email",
+                "password"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                }
+            }
+        },
+        "domain.LoginResponse": {
+            "type": "object",
+            "properties": {
+                "token": {
+                    "type": "string"
+                },
+                "user": {
+                    "$ref": "#/definitions/domain.UserDTO"
+                }
+            }
+        },
+        "domain.MedicalRecordDTO": {
+            "description": "Medical record data transfer object",
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "type": "string",
+                    "example": "2025-07-17T09:00:00Z"
+                },
+                "date": {
+                    "type": "string",
+                    "example": "2025-07-17T10:00:00Z"
+                },
+                "description": {
+                    "type": "string",
+                    "example": "Patient presented with flu-like symptoms."
+                },
+                "diagnosis": {
+                    "type": "string",
+                    "example": "Influenza A"
+                },
+                "doctorId": {
+                    "type": "string",
+                    "example": "60d0fe4f53115a001f000003"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "60d0fe4f53115a001f000001"
+                },
+                "notes": {
+                    "type": "string",
+                    "example": "Advised patient to stay hydrated."
+                },
+                "patientId": {
+                    "type": "string",
+                    "example": "60d0fe4f53115a001f000002"
+                },
+                "recordType": {
+                    "type": "string",
+                    "example": "checkup"
+                },
+                "treatment": {
+                    "type": "string",
+                    "example": "Prescribed Tamiflu and rest."
+                },
+                "updatedAt": {
+                    "type": "string",
+                    "example": "2025-07-17T09:00:00Z"
+                }
+            }
+        },
+        "domain.PatientDTO": {
+            "description": "Patient data transfer object",
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string",
+                    "example": "123 Main St"
+                },
+                "age": {
+                    "type": "integer"
+                },
+                "email": {
+                    "type": "string",
+                    "example": "jane.doe@example.com"
+                },
+                "gender": {
+                    "type": "string",
+                    "example": "Female"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "60d0fe4f53115a001f000001"
+                },
+                "lastVisit": {
+                    "type": "string",
+                    "example": "2025-07-17T10:00:00Z"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Jane Doe"
+                },
+                "phone": {
+                    "type": "string",
+                    "example": "1234567890"
+                }
+            }
+        },
+        "domain.PatientDetailResponse": {
+            "description": "Detailed patient information including recent appointments and medical history",
+            "type": "object",
+            "properties": {
+                "medicalHistory": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/domain.MedicalRecordDTO"
+                    }
+                },
+                "patient": {
+                    "$ref": "#/definitions/domain.PatientDTO"
+                },
+                "recentAppointments": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/domain.AppointmentDTO"
+                    }
+                }
+            }
+        },
+        "domain.Role": {
+            "type": "string",
+            "enum": [
+                "Admin",
+                "Doctor",
+                "Nurse",
+                "Receptionist",
+                "Management"
+            ],
+            "x-enum-varnames": [
+                "RoleAdmin",
+                "RoleDoctor",
+                "RoleNurse",
+                "RoleReceptionist",
+                "RoleManagement"
+            ]
+        },
+        "domain.TimeSlot": {
+            "type": "object",
+            "properties": {
+                "dayOfWeek": {
+                    "description": "0-6 (Sunday-Saturday)",
+                    "type": "integer"
+                },
+                "endTime": {
+                    "type": "string"
+                },
+                "startTime": {
+                    "type": "string"
+                }
+            }
+        },
+        "domain.UpcomingAppointment": {
+            "description": "Upcoming appointment details",
+            "type": "object",
+            "properties": {
+                "date": {
+                    "type": "string",
+                    "example": "2025-07-18T14:00:00Z"
+                },
+                "doctorName": {
+                    "type": "string",
+                    "example": "Jane Smith"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "60d0fe4f53115a001f000002"
+                },
+                "patientName": {
+                    "type": "string",
+                    "example": "John Doe"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "Scheduled"
+                }
+            }
+        },
+        "domain.UpdateDoctorRequet": {
+            "description": "Request body for updating an existing doctor",
+            "type": "object",
+            "required": [
+                "email",
+                "name",
+                "phone",
+                "specialty"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "example": "jane.smith@example.com"
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 3,
+                    "example": "Dr. Jane Smith-Doe"
+                },
+                "phone": {
+                    "type": "string",
+                    "example": "+1987654321"
+                },
+                "specialty": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 3,
+                    "example": "Pediatrics"
+                }
+            }
+        },
+        "domain.UpdateMedicalRecordRequest": {
+            "description": "Request body for updating an existing medical record",
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "maxLength": 1000,
+                    "minLength": 10,
+                    "example": "Patient's symptoms have improved."
+                },
+                "diagnosis": {
+                    "type": "string",
+                    "maxLength": 200,
+                    "minLength": 5,
+                    "example": "Resolved Influenza A"
+                },
+                "notes": {
+                    "type": "string",
+                    "maxLength": 500,
+                    "example": "Patient is recovering well."
+                },
+                "recordType": {
+                    "type": "string",
+                    "enum": [
+                        "checkup",
+                        "followup",
+                        "procedure",
+                        "emergency"
+                    ],
+                    "example": "followup"
+                },
+                "treatment": {
+                    "type": "string",
+                    "maxLength": 1000,
+                    "minLength": 5,
+                    "example": "Continue current medication."
+                }
+            }
+        },
+        "domain.UpdatePatientRequest": {
+            "description": "Request body for updating an existing patient",
+            "type": "object",
+            "required": [
+                "address",
+                "age",
+                "email",
+                "gender",
+                "name",
+                "phone"
+            ],
+            "properties": {
+                "address": {
+                    "type": "string",
+                    "maxLength": 200,
+                    "minLength": 10,
+                    "example": "456 Oak Ave, Somewhere, USA"
+                },
+                "age": {
+                    "type": "integer",
+                    "maximum": 120
+                },
+                "email": {
+                    "type": "string",
+                    "example": "john.doe@example.com"
+                },
+                "gender": {
+                    "type": "string",
+                    "enum": [
+                        "Male",
+                        "Female",
+                        "Other"
+                    ],
+                    "example": "Male"
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 3,
+                    "example": "John Doe Jr."
+                },
+                "phone": {
+                    "type": "string",
+                    "example": "+1234567890"
+                }
+            }
+        },
+        "domain.UserDTO": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "role": {
+                    "$ref": "#/definitions/domain.Role"
+                }
+            }
+        },
+        "domain.UserEntity": {
+            "description": "User object Used for creating and updating users.",
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string",
+                    "example": "john.doe@example.com"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "60d0fe4f53115a001f000001"
+                },
+                "isActive": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "John Doe"
+                },
+                "password": {
+                    "description": "Stores the hashed password",
+                    "type": "string",
+                    "example": "securepassword123"
+                },
+                "role": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/domain.Role"
+                        }
+                    ],
+                    "example": "Admin"
+                },
+                "updatedAt": {
+                    "type": "string"
+                }
+            }
+        },
+        "utils.ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "errors": {},
+                "message": {
+                    "type": "string",
+                    "example": "Error message"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "utils.SuccessResponse": {
+            "type": "object",
+            "properties": {
+                "data": {},
+                "message": {
+                    "type": "string",
+                    "example": "Operation successful"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        }
+    },
+    "securityDefinitions": {
+        "ApiKeyAuth": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
+        }
+    }
+}

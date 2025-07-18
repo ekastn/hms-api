@@ -12,9 +12,9 @@ import (
 )
 
 type PatientService struct {
-	docRepo        *repository.PatientRepository
-	apptRepo       *repository.AppointmentRepository
-	recordRepo     *repository.MedicalRecordRepository
+	docRepo         *repository.PatientRepository
+	apptRepo        *repository.AppointmentRepository
+	recordRepo      *repository.MedicalRecordRepository
 	activityService *ActivityService
 }
 
@@ -25,9 +25,9 @@ func NewPatientService(
 	activityService *ActivityService,
 ) *PatientService {
 	return &PatientService{
-		docRepo:        repo,
-		apptRepo:       apptRepo,
-		recordRepo:     recordRepo,
+		docRepo:         repo,
+		apptRepo:        apptRepo,
+		recordRepo:      recordRepo,
 		activityService: activityService,
 	}
 }

@@ -1,0 +1,1714 @@
+basePath: /api
+definitions:
+  domain.Activity:
+    description: Activity log entry
+    properties:
+      description:
+        example: Appointment for patient John Doe with doctor Jane Smith on 2025-07-17.
+        type: string
+      id:
+        example: 60d0fe4f53115a001f000001
+        type: string
+      timestamp:
+        example: "2025-07-17T10:30:00Z"
+        type: string
+      title:
+        example: New Appointment Scheduled
+        type: string
+      type:
+        description: e.g., "APPOINTMENT", "MEDICAL_RECORD"
+        example: APPOINTMENT
+        type: string
+    type: object
+  domain.AppointmentDTO:
+    properties:
+      createdAt:
+        example: "2025-07-17T09:00:00Z"
+        type: string
+      dateTime:
+        example: "2025-07-17T10:00:00Z"
+        type: string
+      doctorId:
+        example: 60d0fe4f53115a001f000003
+        type: string
+      duration:
+        type: integer
+      id:
+        example: 60d0fe4f53115a001f000001
+        type: string
+      location:
+        example: Room 101
+        maxLength: 100
+        minLength: 3
+        type: string
+      notes:
+        example: Patient complained of headache
+        maxLength: 500
+        type: string
+      patientHistory:
+        example: No significant medical history
+        maxLength: 1000
+        type: string
+      patientId:
+        example: 60d0fe4f53115a001f000002
+        type: string
+      status:
+        allOf:
+        - $ref: '#/definitions/domain.AppointmentStatus'
+        enum:
+        - Scheduled
+        - Confirmed
+        - Completed
+        - Cancelled
+        example: Scheduled
+      type:
+        allOf:
+        - $ref: '#/definitions/domain.AppointmentType'
+        enum:
+        - check-up
+        - follow-up
+        - consultation
+        - procedure
+        - emergency
+        example: check-up
+      updatedAt:
+        example: "2025-07-17T09:00:00Z"
+        type: string
+    required:
+    - dateTime
+    - doctorId
+    - duration
+    - location
+    - patientId
+    - status
+    - type
+    type: object
+  domain.AppointmentDetailResponse:
+    description: Detailed appointment information
+    properties:
+      appointment:
+        $ref: '#/definitions/domain.AppointmentDTO'
+      lastRecord:
+        $ref: '#/definitions/domain.MedicalRecordDTO'
+      patient:
+        $ref: '#/definitions/domain.PatientDTO'
+    type: object
+  domain.AppointmentStatus:
+    enum:
+    - Scheduled
+    - Confirmed
+    - Completed
+    - Cancelled
+    type: string
+    x-enum-varnames:
+    - AppointmentStatusScheduled
+    - AppointmentStatusConfirmed
+    - AppointmentStatusCompleted
+    - AppointmentStatusCancelled
+  domain.AppointmentType:
+    enum:
+    - check-up
+    - follow-up
+    - consultation
+    - procedure
+    - emergency
+    type: string
+    x-enum-varnames:
+    - AppointmentTypeCheckUp
+    - AppointmentTypeFollowUp
+    - AppointmentTypeConsultation
+    - AppointmentTypeProcedure
+    - AppointmentTypeEmergency
+  domain.CreateDoctorRequet:
+    description: Request body for creating a new doctor
+    properties:
+      email:
+        example: jane.smith@example.com
+        type: string
+      name:
+        example: Dr. Jane Smith
+        maxLength: 100
+        minLength: 3
+        type: string
+      phone:
+        example: "+1987654321"
+        type: string
+      specialty:
+        example: Pediatrics
+        maxLength: 100
+        minLength: 3
+        type: string
+    required:
+    - email
+    - name
+    - phone
+    - specialty
+    type: object
+  domain.CreateMedicalRecordRequest:
+    description: Request body for creating a new medical record
+    properties:
+      description:
+        example: Patient presented with flu-like symptoms.
+        maxLength: 1000
+        minLength: 10
+        type: string
+      diagnosis:
+        example: Influenza A
+        maxLength: 200
+        minLength: 5
+        type: string
+      doctorId:
+        example: 60d0fe4f53115a001f000003
+        type: string
+      notes:
+        example: Advised patient to stay hydrated.
+        maxLength: 500
+        type: string
+      patientId:
+        example: 60d0fe4f53115a001f000002
+        type: string
+      recordType:
+        enum:
+        - checkup
+        - followup
+        - procedure
+        - emergency
+        example: checkup
+        type: string
+      treatment:
+        example: Prescribed Tamiflu and rest.
+        maxLength: 1000
+        minLength: 5
+        type: string
+    required:
+    - description
+    - diagnosis
+    - doctorId
+    - patientId
+    - recordType
+    - treatment
+    type: object
+  domain.CreatePatientRequest:
+    description: Request body for creating a new patient
+    properties:
+      address:
+        example: 123 Main St, Anytown, USA
+        maxLength: 200
+        minLength: 10
+        type: string
+      age:
+        maximum: 120
+        type: integer
+      email:
+        example: john.doe@example.com
+        type: string
+      gender:
+        enum:
+        - Male
+        - Female
+        - Other
+        example: Male
+        type: string
+      name:
+        example: John Doe
+        maxLength: 100
+        minLength: 3
+        type: string
+      phone:
+        example: "+1234567890"
+        type: string
+    required:
+    - address
+    - age
+    - email
+    - gender
+    - name
+    - phone
+    type: object
+  domain.DashboardResponse:
+    description: Dashboard response containing statistics, recent activities, and
+      upcoming appointments
+    properties:
+      recentActivities:
+        items:
+          $ref: '#/definitions/domain.Activity'
+        type: array
+      stats:
+        $ref: '#/definitions/domain.DashboardStats'
+      upcomingAppointments:
+        items:
+          $ref: '#/definitions/domain.UpcomingAppointment'
+        type: array
+    type: object
+  domain.DashboardStats:
+    description: Dashboard statistics
+    properties:
+      appointmentsCount:
+        type: integer
+      doctorsCount:
+        type: integer
+      medicalRecordsCount:
+        type: integer
+      patientsCount:
+        type: integer
+    type: object
+  domain.DoctorDTO:
+    description: Doctor data transfer object
+    properties:
+      availability:
+        items:
+          $ref: '#/definitions/domain.TimeSlot'
+        type: array
+      createdAt:
+        example: "2025-07-17T09:00:00Z"
+        type: string
+      email:
+        example: john.doe@example.com
+        type: string
+      id:
+        example: 60d0fe4f53115a001f000001
+        type: string
+      name:
+        example: Dr. John Doe
+        type: string
+      phone:
+        example: "1234567890"
+        type: string
+      specialty:
+        example: Cardiology
+        type: string
+      updatedAt:
+        example: "2025-07-17T09:00:00Z"
+        type: string
+    type: object
+  domain.DoctorDetailResponse:
+    description: Detailed doctor information including recent patients
+    properties:
+      doctor:
+        $ref: '#/definitions/domain.DoctorDTO'
+      recentPatients:
+        items:
+          $ref: '#/definitions/domain.PatientDTO'
+        type: array
+    type: object
+  domain.LoginRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  domain.LoginResponse:
+    properties:
+      token:
+        type: string
+      user:
+        $ref: '#/definitions/domain.UserDTO'
+    type: object
+  domain.MedicalRecordDTO:
+    description: Medical record data transfer object
+    properties:
+      createdAt:
+        example: "2025-07-17T09:00:00Z"
+        type: string
+      date:
+        example: "2025-07-17T10:00:00Z"
+        type: string
+      description:
+        example: Patient presented with flu-like symptoms.
+        type: string
+      diagnosis:
+        example: Influenza A
+        type: string
+      doctorId:
+        example: 60d0fe4f53115a001f000003
+        type: string
+      id:
+        example: 60d0fe4f53115a001f000001
+        type: string
+      notes:
+        example: Advised patient to stay hydrated.
+        type: string
+      patientId:
+        example: 60d0fe4f53115a001f000002
+        type: string
+      recordType:
+        example: checkup
+        type: string
+      treatment:
+        example: Prescribed Tamiflu and rest.
+        type: string
+      updatedAt:
+        example: "2025-07-17T09:00:00Z"
+        type: string
+    type: object
+  domain.PatientDTO:
+    description: Patient data transfer object
+    properties:
+      address:
+        example: 123 Main St
+        type: string
+      age:
+        type: integer
+      email:
+        example: jane.doe@example.com
+        type: string
+      gender:
+        example: Female
+        type: string
+      id:
+        example: 60d0fe4f53115a001f000001
+        type: string
+      lastVisit:
+        example: "2025-07-17T10:00:00Z"
+        type: string
+      name:
+        example: Jane Doe
+        type: string
+      phone:
+        example: "1234567890"
+        type: string
+    type: object
+  domain.PatientDetailResponse:
+    description: Detailed patient information including recent appointments and medical
+      history
+    properties:
+      medicalHistory:
+        items:
+          $ref: '#/definitions/domain.MedicalRecordDTO'
+        type: array
+      patient:
+        $ref: '#/definitions/domain.PatientDTO'
+      recentAppointments:
+        items:
+          $ref: '#/definitions/domain.AppointmentDTO'
+        type: array
+    type: object
+  domain.Role:
+    enum:
+    - Admin
+    - Doctor
+    - Nurse
+    - Receptionist
+    - Management
+    type: string
+    x-enum-varnames:
+    - RoleAdmin
+    - RoleDoctor
+    - RoleNurse
+    - RoleReceptionist
+    - RoleManagement
+  domain.TimeSlot:
+    properties:
+      dayOfWeek:
+        description: 0-6 (Sunday-Saturday)
+        type: integer
+      endTime:
+        type: string
+      startTime:
+        type: string
+    type: object
+  domain.UpcomingAppointment:
+    description: Upcoming appointment details
+    properties:
+      date:
+        example: "2025-07-18T14:00:00Z"
+        type: string
+      doctorName:
+        example: Jane Smith
+        type: string
+      id:
+        example: 60d0fe4f53115a001f000002
+        type: string
+      patientName:
+        example: John Doe
+        type: string
+      status:
+        example: Scheduled
+        type: string
+    type: object
+  domain.UpdateDoctorRequet:
+    description: Request body for updating an existing doctor
+    properties:
+      email:
+        example: jane.smith@example.com
+        type: string
+      name:
+        example: Dr. Jane Smith-Doe
+        maxLength: 100
+        minLength: 3
+        type: string
+      phone:
+        example: "+1987654321"
+        type: string
+      specialty:
+        example: Pediatrics
+        maxLength: 100
+        minLength: 3
+        type: string
+    required:
+    - email
+    - name
+    - phone
+    - specialty
+    type: object
+  domain.UpdateMedicalRecordRequest:
+    description: Request body for updating an existing medical record
+    properties:
+      description:
+        example: Patient's symptoms have improved.
+        maxLength: 1000
+        minLength: 10
+        type: string
+      diagnosis:
+        example: Resolved Influenza A
+        maxLength: 200
+        minLength: 5
+        type: string
+      notes:
+        example: Patient is recovering well.
+        maxLength: 500
+        type: string
+      recordType:
+        enum:
+        - checkup
+        - followup
+        - procedure
+        - emergency
+        example: followup
+        type: string
+      treatment:
+        example: Continue current medication.
+        maxLength: 1000
+        minLength: 5
+        type: string
+    type: object
+  domain.UpdatePatientRequest:
+    description: Request body for updating an existing patient
+    properties:
+      address:
+        example: 456 Oak Ave, Somewhere, USA
+        maxLength: 200
+        minLength: 10
+        type: string
+      age:
+        maximum: 120
+        type: integer
+      email:
+        example: john.doe@example.com
+        type: string
+      gender:
+        enum:
+        - Male
+        - Female
+        - Other
+        example: Male
+        type: string
+      name:
+        example: John Doe Jr.
+        maxLength: 100
+        minLength: 3
+        type: string
+      phone:
+        example: "+1234567890"
+        type: string
+    required:
+    - address
+    - age
+    - email
+    - gender
+    - name
+    - phone
+    type: object
+  domain.UserDTO:
+    properties:
+      email:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      role:
+        $ref: '#/definitions/domain.Role'
+    type: object
+  domain.UserEntity:
+    description: User object Used for creating and updating users.
+    properties:
+      createdAt:
+        type: string
+      email:
+        example: john.doe@example.com
+        type: string
+      id:
+        example: 60d0fe4f53115a001f000001
+        type: string
+      isActive:
+        type: boolean
+      name:
+        example: John Doe
+        type: string
+      password:
+        description: Stores the hashed password
+        example: securepassword123
+        type: string
+      role:
+        allOf:
+        - $ref: '#/definitions/domain.Role'
+        example: Admin
+      updatedAt:
+        type: string
+    type: object
+  utils.ErrorResponse:
+    properties:
+      errors: {}
+      message:
+        example: Error message
+        type: string
+      success:
+        type: boolean
+    type: object
+  utils.SuccessResponse:
+    properties:
+      data: {}
+      message:
+        example: Operation successful
+        type: string
+      success:
+        type: boolean
+    type: object
+host: localhost:5021
+info:
+  contact:
+    email: eka@voixes.studio
+    name: API Support
+    url: https://github.com/ekastn
+  description: This is the API documentation for the Hospital Management System.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: HMS API Documentation
+  version: "1.0"
+paths:
+  /appointments:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a list of all appointments.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of appointments
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.SuccessResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/domain.AppointmentDTO'
+                  type: array
+              type: object
+        "500":
+          description: Failed to retrieve appointments
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get all appointments
+      tags:
+      - Appointments
+    post:
+      consumes:
+      - application/json
+      description: Create a new appointment.
+      parameters:
+      - description: Appointment object to be created
+        in: body
+        name: appointment
+        required: true
+        schema:
+          $ref: '#/definitions/domain.AppointmentDTO'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Appointment created successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.SuccessResponse'
+            - properties:
+                data:
+                  properties:
+                    id:
+                      type: string
+                  type: object
+              type: object
+        "400":
+          description: Invalid request body or validation failed
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Failed to create appointment
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Create a new appointment
+      tags:
+      - Appointments
+  /appointments/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Cancel an appointment (soft delete by changing status to 'Cancelled').
+      parameters:
+      - description: Appointment ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Appointment cancelled successfully
+          schema:
+            $ref: '#/definitions/utils.SuccessResponse'
+        "400":
+          description: Appointment ID is required
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Failed to cancel appointment
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Cancel an appointment
+      tags:
+      - Appointments
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a single appointment by its ID.
+      parameters:
+      - description: Appointment ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Appointment retrieved successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/domain.AppointmentDTO'
+              type: object
+        "400":
+          description: Appointment ID is required
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "404":
+          description: Appointment not found
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Failed to retrieve appointment
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get appointment by ID
+      tags:
+      - Appointments
+    put:
+      consumes:
+      - application/json
+      description: Update details of an existing appointment.
+      parameters:
+      - description: Appointment ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Appointment object with updated fields
+        in: body
+        name: appointment
+        required: true
+        schema:
+          $ref: '#/definitions/domain.AppointmentDTO'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Appointment updated successfully
+          schema:
+            $ref: '#/definitions/utils.SuccessResponse'
+        "400":
+          description: Invalid request body or validation failed
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Failed to update appointment
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Update an existing appointment
+      tags:
+      - Appointments
+  /appointments/{id}/detail:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve detailed information for a single appointment, including
+        patient and medical history.
+      parameters:
+      - description: Appointment ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Appointment details retrieved successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/domain.AppointmentDetailResponse'
+              type: object
+        "400":
+          description: Appointment ID is required
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "404":
+          description: Appointment not found
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Failed to retrieve appointment details
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get detailed appointment information
+      tags:
+      - Appointments
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticate user and return JWT token.
+      parameters:
+      - description: User credentials
+        in: body
+        name: credentials
+        required: true
+        schema:
+          $ref: '#/definitions/domain.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Login successful
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/domain.LoginResponse'
+              type: object
+        "400":
+          description: Invalid request body or validation failed
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "401":
+          description: Invalid credentials
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      summary: User login
+      tags:
+      - Authentication
+  /dashboard:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve various statistics and recent activities for the dashboard.
+        Admin or Management access required.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Dashboard data retrieved successfully
+          schema:
+            $ref: '#/definitions/domain.DashboardResponse'
+        "500":
+          description: Failed to get dashboard data
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get dashboard data
+      tags:
+      - Dashboard
+  /doctors:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a list of all registered doctors.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of doctors
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.SuccessResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/domain.DoctorDTO'
+                  type: array
+              type: object
+        "500":
+          description: Failed to retrieve doctors
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get all doctors
+      tags:
+      - Doctors
+    post:
+      consumes:
+      - application/json
+      description: Create a new doctor entry.
+      parameters:
+      - description: Doctor object to be created
+        in: body
+        name: doctor
+        required: true
+        schema:
+          $ref: '#/definitions/domain.CreateDoctorRequet'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Doctor created successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.SuccessResponse'
+            - properties:
+                data:
+                  properties:
+                    id:
+                      type: string
+                  type: object
+              type: object
+        "400":
+          description: Invalid request body or validation failed
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Failed to create doctor
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Create a new doctor
+      tags:
+      - Doctors
+  /doctors/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a doctor entry.
+      parameters:
+      - description: Doctor ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Doctor deleted successfully
+          schema:
+            $ref: '#/definitions/utils.SuccessResponse'
+        "500":
+          description: Failed to delete doctor
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Delete a doctor
+      tags:
+      - Doctors
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a single doctor by their ID.
+      parameters:
+      - description: Doctor ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Doctor details
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/domain.DoctorDTO'
+              type: object
+        "404":
+          description: Doctor not found
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Failed to retrieve doctor
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get doctor by ID
+      tags:
+      - Doctors
+    put:
+      consumes:
+      - application/json
+      description: Update details of an existing doctor.
+      parameters:
+      - description: Doctor ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Doctor object with updated fields
+        in: body
+        name: doctor
+        required: true
+        schema:
+          $ref: '#/definitions/domain.UpdateDoctorRequet'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Doctor updated successfully
+          schema:
+            $ref: '#/definitions/utils.SuccessResponse'
+        "400":
+          description: Invalid request body or validation failed
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "404":
+          description: Doctor not found
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Failed to update doctor
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Update an existing doctor
+      tags:
+      - Doctors
+  /doctors/{id}/detail:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve detailed information for a single doctor, including recent
+        patients.
+      parameters:
+      - description: Doctor ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Doctor details with recent patients
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/domain.DoctorDetailResponse'
+              type: object
+        "404":
+          description: Doctor not found
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Failed to retrieve doctor details
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get detailed doctor information
+      tags:
+      - Doctors
+  /health:
+    get:
+      consumes:
+      - application/json
+      description: Checks if the server is healthy
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: Health check endpoint
+      tags:
+      - Health
+  /patients:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a list of all registered patients.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of patients
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.SuccessResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/domain.PatientDTO'
+                  type: array
+              type: object
+        "500":
+          description: Failed to retrieve patients
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get all patients
+      tags:
+      - Patients
+    post:
+      consumes:
+      - application/json
+      description: Create a new patient entry.
+      parameters:
+      - description: Patient object to be created
+        in: body
+        name: patient
+        required: true
+        schema:
+          $ref: '#/definitions/domain.CreatePatientRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Patient created successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.SuccessResponse'
+            - properties:
+                data:
+                  properties:
+                    id:
+                      type: string
+                  type: object
+              type: object
+        "400":
+          description: Invalid request body or validation failed
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Failed to create patient
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Create a new patient
+      tags:
+      - Patients
+  /patients/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a patient entry.
+      parameters:
+      - description: Patient ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Patient deleted successfully
+          schema:
+            $ref: '#/definitions/utils.SuccessResponse'
+        "500":
+          description: Failed to delete patient
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Delete a patient
+      tags:
+      - Patients
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a single patient by their ID.
+      parameters:
+      - description: Patient ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Patient details
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/domain.PatientDTO'
+              type: object
+        "404":
+          description: Patient not found
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Failed to retrieve patient
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get patient by ID
+      tags:
+      - Patients
+    put:
+      consumes:
+      - application/json
+      description: Update details of an existing patient.
+      parameters:
+      - description: Patient ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Patient object with updated fields
+        in: body
+        name: patient
+        required: true
+        schema:
+          $ref: '#/definitions/domain.UpdatePatientRequest'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Patient updated successfully
+          schema:
+            $ref: '#/definitions/utils.SuccessResponse'
+        "400":
+          description: Invalid request body or validation failed
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "404":
+          description: Patient not found
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Failed to update patient
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Update an existing patient
+      tags:
+      - Patients
+  /patients/{id}/detail:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve comprehensive information for a single patient, including
+        recent appointments and medical history.
+      parameters:
+      - description: Patient ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Patient details with appointments and medical history
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/domain.PatientDetailResponse'
+              type: object
+        "404":
+          description: Patient not found
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Failed to retrieve patient details
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get detailed patient information
+      tags:
+      - Patients
+  /records:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a list of all medical records.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Medical records retrieved successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.SuccessResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/domain.MedicalRecordDTO'
+                  type: array
+              type: object
+        "500":
+          description: Failed to get medical records
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get all medical records
+      tags:
+      - Medical Records
+    post:
+      consumes:
+      - application/json
+      description: Create a new medical record entry.
+      parameters:
+      - description: Medical record object to be created
+        in: body
+        name: medicalRecord
+        required: true
+        schema:
+          $ref: '#/definitions/domain.CreateMedicalRecordRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Medical record created
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.SuccessResponse'
+            - properties:
+                data:
+                  properties:
+                    id:
+                      type: string
+                  type: object
+              type: object
+        "400":
+          description: Invalid request body or validation failed
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Failed to create medical record
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Create a new medical record
+      tags:
+      - Medical Records
+  /records/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a medical record entry.
+      parameters:
+      - description: Medical Record ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Medical record deleted successfully
+          schema:
+            $ref: '#/definitions/utils.SuccessResponse'
+        "400":
+          description: Record ID is required
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Failed to delete medical record
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Delete a medical record
+      tags:
+      - Medical Records
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a single medical record by its ID.
+      parameters:
+      - description: Medical Record ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Medical record details
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/domain.MedicalRecordDTO'
+              type: object
+        "400":
+          description: Record ID is required
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "404":
+          description: Medical record not found
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Failed to get medical record
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get medical record by ID
+      tags:
+      - Medical Records
+    put:
+      consumes:
+      - application/json
+      description: Update details of an existing medical record.
+      parameters:
+      - description: Medical Record ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Medical record object with updated fields
+        in: body
+        name: medicalRecord
+        required: true
+        schema:
+          $ref: '#/definitions/domain.UpdateMedicalRecordRequest'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Medical record updated successfully
+          schema:
+            $ref: '#/definitions/utils.SuccessResponse'
+        "400":
+          description: Invalid request body or validation failed
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "404":
+          description: Medical record not found
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Failed to update medical record
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Update an existing medical record
+      tags:
+      - Medical Records
+  /records/date-range:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a list of medical records within a specified date range.
+      parameters:
+      - description: Start date (RFC3339 format)
+        in: query
+        name: start
+        required: true
+        type: string
+      - description: End date (RFC3339 format)
+        in: query
+        name: end
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Medical records by date range
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.SuccessResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/domain.MedicalRecordDTO'
+                  type: array
+              type: object
+        "400":
+          description: Both start and end dates are required or invalid format
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Failed to get medical records
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get medical records by date range
+      tags:
+      - Medical Records
+  /records/patient/{patientId}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a list of medical records for a specific patient.
+      parameters:
+      - description: Patient ID
+        in: path
+        name: patientId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Patient medical records
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.SuccessResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/domain.MedicalRecordDTO'
+                  type: array
+              type: object
+        "400":
+          description: Patient ID is required
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Failed to get medical records
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get medical records by patient ID
+      tags:
+      - Medical Records
+  /users:
+    get:
+      consumes:
+      - application/json
+      description: Get a list of all registered users. Admin access required.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Users retrieved successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.SuccessResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/domain.UserDTO'
+                  type: array
+              type: object
+        "500":
+          description: Failed to retrieve users
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get all users
+      tags:
+      - Users
+    post:
+      consumes:
+      - application/json
+      description: Create a new user account. Admin access required.
+      parameters:
+      - description: User object to be created
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/domain.UserEntity'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: User created successfully
+          schema:
+            $ref: '#/definitions/utils.SuccessResponse'
+        "400":
+          description: Invalid request body
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Failed to create user
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Create a new user
+      tags:
+      - Users
+  /users/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Deactivate a user account (soft delete). Admin access required.
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: User deactivated successfully
+          schema:
+            $ref: '#/definitions/utils.SuccessResponse'
+        "500":
+          description: Failed to deactivate user
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Deactivate a user
+      tags:
+      - Users
+    get:
+      consumes:
+      - application/json
+      description: Get a single user by their ID. Admin access required.
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User retrieved successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/domain.UserDTO'
+              type: object
+        "404":
+          description: User not found
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Failed to retrieve user
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get user by ID
+      tags:
+      - Users
+    put:
+      consumes:
+      - application/json
+      description: Update details of an existing user. Admin access required.
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: User object with updated fields
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/domain.UserEntity'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: User updated successfully
+          schema:
+            $ref: '#/definitions/utils.SuccessResponse'
+        "400":
+          description: Invalid request body
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Failed to update user
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Update an existing user
+      tags:
+      - Users
+securityDefinitions:
+  ApiKeyAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

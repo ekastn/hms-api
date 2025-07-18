@@ -15,6 +15,17 @@ type MedicalRecordHandler struct {
 	recordService *service.MedicalRecordService
 }
 
+// GetAll retrieves all medical records
+//
+//	@Summary		Get all medical records
+//	@Description	Retrieve a list of all medical records.
+//	@Tags			Medical Records
+//	@Accept			json
+//	@Produce		json
+//	@Security		ApiKeyAuth
+//	@Success		200	{object}	utils.SuccessResponse{data=[]domain.MedicalRecordDTO}	"Medical records retrieved successfully"
+//	@Failure		500	{object}	utils.ErrorResponse										"Failed to get medical records"
+//	@Router			/records [get]
 func (h *MedicalRecordHandler) GetAll(c *fiber.Ctx) error {
 	records, err := h.recordService.GetAll(c.Context())
 	if err != nil {
@@ -37,6 +48,20 @@ func NewMedicalRecordHandler(recordService *service.MedicalRecordService) *Medic
 	}
 }
 
+// GetByID handles the request to get a medical record by ID.
+//
+//	@Summary		Get medical record by ID
+//	@Description	Retrieve a single medical record by its ID.
+//	@Tags			Medical Records
+//	@Accept			json
+//	@Produce		json
+//	@Security		ApiKeyAuth
+//	@Param			id	path		string												true	"Medical Record ID"
+//	@Success		200	{object}	utils.SuccessResponse{data=domain.MedicalRecordDTO}	"Medical record details"
+//	@Failure		400	{object}	utils.ErrorResponse									"Record ID is required"
+//	@Failure		404	{object}	utils.ErrorResponse									"Medical record not found"
+//	@Failure		500	{object}	utils.ErrorResponse									"Failed to get medical record"
+//	@Router			/records/{id} [get]
 func (h *MedicalRecordHandler) GetByID(c *fiber.Ctx) error {
 	id := c.Params("id")
 	if id == "" {
@@ -56,6 +81,19 @@ func (h *MedicalRecordHandler) GetByID(c *fiber.Ctx) error {
 	return utils.ResponseJSON(c, fiber.StatusOK, "Medical record details", record.ToDTO())
 }
 
+// GetByPatientID handles the request to get medical records by patient ID.
+//
+//	@Summary		Get medical records by patient ID
+//	@Description	Retrieve a list of medical records for a specific patient.
+//	@Tags			Medical Records
+//	@Accept			json
+//	@Produce		json
+//	@Security		ApiKeyAuth
+//	@Param			patientId	path		string													true	"Patient ID"
+//	@Success		200			{object}	utils.SuccessResponse{data=[]domain.MedicalRecordDTO}	"Patient medical records"
+//	@Failure		400			{object}	utils.ErrorResponse										"Patient ID is required"
+//	@Failure		500			{object}	utils.ErrorResponse										"Failed to get medical records"
+//	@Router			/records/patient/{patientId} [get]
 func (h *MedicalRecordHandler) GetByPatientID(c *fiber.Ctx) error {
 	patientID := c.Params("patientId")
 	if patientID == "" {
@@ -76,6 +114,20 @@ func (h *MedicalRecordHandler) GetByPatientID(c *fiber.Ctx) error {
 	return utils.ResponseJSON(c, fiber.StatusOK, "Patient medical records", recordDTOs)
 }
 
+// GetByDateRange handles the request to get medical records by date range.
+//
+//	@Summary		Get medical records by date range
+//	@Description	Retrieve a list of medical records within a specified date range.
+//	@Tags			Medical Records
+//	@Accept			json
+//	@Produce		json
+//	@Security		ApiKeyAuth
+//	@Param			start	query		string													true	"Start date (RFC3339 format)"
+//	@Param			end		query		string													true	"End date (RFC3339 format)"
+//	@Success		200		{object}	utils.SuccessResponse{data=[]domain.MedicalRecordDTO}	"Medical records by date range"
+//	@Failure		400		{object}	utils.ErrorResponse										"Both start and end dates are required or invalid format"
+//	@Failure		500		{object}	utils.ErrorResponse										"Failed to get medical records"
+//	@Router			/records/date-range [get]
 func (h *MedicalRecordHandler) GetByDateRange(c *fiber.Ctx) error {
 	startDateStr := c.Query("start")
 	endDateStr := c.Query("end")
@@ -108,6 +160,19 @@ func (h *MedicalRecordHandler) GetByDateRange(c *fiber.Ctx) error {
 	return utils.ResponseJSON(c, fiber.StatusOK, "Medical records by date range", recordDTOs)
 }
 
+// Create handles the request to create a new medical record.
+//
+//	@Summary		Create a new medical record
+//	@Description	Create a new medical record entry.
+//	@Tags			Medical Records
+//	@Accept			json
+//	@Produce		json
+//	@Security		ApiKeyAuth
+//	@Param			medicalRecord	body		domain.CreateMedicalRecordRequest				true	"Medical record object to be created"
+//	@Success		201				{object}	utils.SuccessResponse{data=object{id=string}}	"Medical record created"
+//	@Failure		400				{object}	utils.ErrorResponse								"Invalid request body or validation failed"
+//	@Failure		500				{object}	utils.ErrorResponse								"Failed to create medical record"
+//	@Router			/records [post]
 func (h *MedicalRecordHandler) Create(c *fiber.Ctx) error {
 	var req domain.CreateMedicalRecordRequest
 	if err := c.BodyParser(&req); err != nil {
@@ -153,6 +218,21 @@ func (h *MedicalRecordHandler) Create(c *fiber.Ctx) error {
 	return utils.ResponseJSON(c, fiber.StatusCreated, "Medical record created", fiber.Map{"id": id})
 }
 
+// Update handles the request to update a medical record.
+//
+//	@Summary		Update an existing medical record
+//	@Description	Update details of an existing medical record.
+//	@Tags			Medical Records
+//	@Accept			json
+//	@Produce		json
+//	@Security		ApiKeyAuth
+//	@Param			id				path		string								true	"Medical Record ID"
+//	@Param			medicalRecord	body		domain.UpdateMedicalRecordRequest	true	"Medical record object with updated fields"
+//	@Success		204				{object}	utils.SuccessResponse				"Medical record updated successfully"
+//	@Failure		400				{object}	utils.ErrorResponse					"Invalid request body or validation failed"
+//	@Failure		404				{object}	utils.ErrorResponse					"Medical record not found"
+//	@Failure		500				{object}	utils.ErrorResponse					"Failed to update medical record"
+//	@Router			/records/{id} [put]
 func (h *MedicalRecordHandler) Update(c *fiber.Ctx) error {
 	id := c.Params("id")
 	if id == "" {
@@ -211,6 +291,19 @@ func (h *MedicalRecordHandler) Update(c *fiber.Ctx) error {
 	return utils.ResponseJSON(c, fiber.StatusNoContent, "Medical record updated successfully", nil)
 }
 
+// Delete handles the request to delete a medical record.
+//
+//	@Summary		Delete a medical record
+//	@Description	Delete a medical record entry.
+//	@Tags			Medical Records
+//	@Accept			json
+//	@Produce		json
+//	@Security		ApiKeyAuth
+//	@Param			id	path		string					true	"Medical Record ID"
+//	@Success		200	{object}	utils.SuccessResponse	"Medical record deleted successfully"
+//	@Failure		400	{object}	utils.ErrorResponse		"Record ID is required"
+//	@Failure		500	{object}	utils.ErrorResponse		"Failed to delete medical record"
+//	@Router			/records/{id} [delete]
 func (h *MedicalRecordHandler) Delete(c *fiber.Ctx) error {
 	id := c.Params("id")
 	if id == "" {

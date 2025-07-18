@@ -2,17 +2,16 @@ package service
 
 import (
 	"context"
-	
 
 	"github.com/ekastn/hms-api/internal/domain"
 	"github.com/ekastn/hms-api/internal/repository"
 )
 
 type DashboardService struct {
-	patientRepo *repository.PatientRepository
-	docRepo     *repository.DoctorRepository
-	apptRepo    *repository.AppointmentRepository
-	recordRepo  *repository.MedicalRecordRepository
+	patientRepo  *repository.PatientRepository
+	docRepo      *repository.DoctorRepository
+	apptRepo     *repository.AppointmentRepository
+	recordRepo   *repository.MedicalRecordRepository
 	activityRepo *repository.ActivityRepository
 }
 
@@ -24,10 +23,10 @@ func NewDashboardService(
 	activityRepo *repository.ActivityRepository,
 ) *DashboardService {
 	return &DashboardService{
-		patientRepo: patientRepo,
-		docRepo:     docRepo,
-		apptRepo:    apptRepo,
-		recordRepo:  recordRepo,
+		patientRepo:  patientRepo,
+		docRepo:      docRepo,
+		apptRepo:     apptRepo,
+		recordRepo:   recordRepo,
 		activityRepo: activityRepo,
 	}
 }

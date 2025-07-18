@@ -6,6 +6,7 @@ import (
 	"github.com/ekastn/hms-api/internal/repository"
 	"github.com/ekastn/hms-api/internal/service"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/swagger"
 )
 
 func (a *App) setupRoutes() {
@@ -110,8 +111,18 @@ func (a *App) setupRoutes() {
 	records.Put("/:id", RBACMiddleware(domain.RoleAdmin, domain.RoleDoctor), medicalRecordHandler.Update)
 	records.Delete("/:id", RBACMiddleware(domain.RoleAdmin), medicalRecordHandler.Delete)
 
-	// Health check route
-	api.Get("/", func(c *fiber.Ctx) error {
-		return c.SendString("OK")
-	})
+	api.Get("/docs/*", swagger.HandlerDefault)
+
+	api.Get("/health", healthCheck)
+}
+
+// @Summary Health check endpoint
+// @Description Checks if the server is healthy
+// @Tags Health
+// @Accept json
+// @Produce json
+// @Success 200 {object} string "OK"
+// @Router /health [get]
+func healthCheck(c *fiber.Ctx) error {
+    return c.SendString("OK")
 }

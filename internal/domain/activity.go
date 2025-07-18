@@ -9,7 +9,7 @@ import (
 type ActivityType string
 
 const (
-	ActivityTypeAppointment ActivityType = "APPOINTMENT"
+	ActivityTypeAppointment   ActivityType = "APPOINTMENT"
 	ActivityTypeMedicalRecord ActivityType = "MEDICAL_RECORD"
 	ActivityTypePatient       ActivityType = "PATIENT"
 	ActivityTypeDoctor        ActivityType = "DOCTOR"

@@ -78,8 +78,6 @@ func (r *AppointmentRepository) Update(ctx context.Context, id primitive.ObjectI
 	return err
 }
 
-
-
 func (r *AppointmentRepository) GetUpcomingAppointments(ctx context.Context, limit int) ([]*domain.UpcomingAppointment, error) {
 	now := time.Now()
 	end := now.Add(7 * 24 * time.Hour) // Next 7 days

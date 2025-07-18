@@ -1,4 +1,3 @@
-
 package service
 
 import (
@@ -8,21 +7,21 @@ import (
 
 	"github.com/ekastn/hms-api/internal/domain"
 	"github.com/ekastn/hms-api/internal/repository"
+	"github.com/ekastn/hms-api/internal/utils"
 	"github.com/golang-jwt/jwt/v5"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"golang.org/x/crypto/bcrypt"
 )
 
 // AuthService handles user authentication and JWT generation.
 type AuthService struct {
-	userRepo *repository.UserRepository
+	userRepo  *repository.UserRepository
 	jwtSecret string
 }
 
 // NewAuthService creates a new AuthService.
 func NewAuthService(userRepo *repository.UserRepository, jwtSecret string) *AuthService {
 	return &AuthService{
-		userRepo: userRepo,
+		userRepo:  userRepo,
 		jwtSecret: jwtSecret,
 	}
 }
@@ -37,7 +36,7 @@ func (s *AuthService) Login(ctx context.Context, email, password string) (*domai
 		return nil, errors.New("invalid credentials")
 	}
 
-	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
+	if !utils.CheckPasswordHash(password, user.Password) {
 		return nil, errors.New("invalid credentials")
 	}
 
@@ -61,7 +60,7 @@ func (s *AuthService) Login(ctx context.Context, email, password string) (*domai
 
 // CreateUser creates a new user with a hashed password.
 func (s *AuthService) CreateUser(ctx context.Context, user *domain.UserEntity) (primitive.ObjectID, error) {
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+	hashedPassword, err := utils.HashPassword(user.Password)
 	if err != nil {
 		return primitive.NilObjectID, err
 	}

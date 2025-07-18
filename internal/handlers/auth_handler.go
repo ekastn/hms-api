@@ -1,4 +1,3 @@
-
 package handlers
 
 import (
@@ -19,6 +18,17 @@ func NewAuthHandler(authService *service.AuthService) *AuthHandler {
 }
 
 // Login handles the user login request.
+//
+//	@Summary		User login
+//	@Description	Authenticate user and return JWT token.
+//	@Tags			Authentication
+//	@Accept			json
+//	@Produce		json
+//	@Param			credentials	body		domain.LoginRequest									true	"User credentials"
+//	@Success		200			{object}	utils.SuccessResponse{data=domain.LoginResponse}	"Login successful"
+//	@Failure		400			{object}	utils.ErrorResponse									"Invalid request body or validation failed"
+//	@Failure		401			{object}	utils.ErrorResponse									"Invalid credentials"
+//	@Router			/auth/login [post]
 func (h *AuthHandler) Login(c *fiber.Ctx) error {
 	var req domain.LoginRequest
 	if err := c.BodyParser(&req); err != nil {

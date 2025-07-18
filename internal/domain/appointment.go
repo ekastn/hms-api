@@ -41,38 +41,42 @@ func (at AppointmentType) IsValid() bool {
 	return false
 }
 
+// @Description	Appointment object
+// @swagger:model
 type AppointmentEntity struct {
-	ID             primitive.ObjectID `bson:"_id,omitempty"`
-	PatientID      primitive.ObjectID `bson:"patientId"`
-	DoctorID       primitive.ObjectID `bson:"doctorId"`
-	Type           AppointmentType    `bson:"type"`
-	DateTime       time.Time          `bson:"dateTime"`
-	Duration       int                `bson:"duration"` // in minutes
-	Status         AppointmentStatus  `bson:"status"`
-	Location       string             `bson:"location"`
-	Notes          string             `bson:"notes,omitempty"`
-	PatientHistory string             `bson:"patientHistory,omitempty"`
-	CreatedBy      primitive.ObjectID `bson:"createdBy"`
-	UpdatedBy      primitive.ObjectID `bson:"updatedBy"`
-	CreatedAt      time.Time          `bson:"createdAt"`
-	UpdatedAt      time.Time          `bson:"updatedAt"`
+	ID             primitive.ObjectID `bson:"_id,omitempty" json:"id,omitempty" example:"60d0fe4f53115a001f000001"`
+	PatientID      primitive.ObjectID `bson:"patientId" json:"patientId" example:"60d0fe4f53115a001f000002"`
+	DoctorID       primitive.ObjectID `bson:"doctorId" json:"doctorId" example:"60d0fe4f53115a001f000003"`
+	Type           AppointmentType    `bson:"type" json:"type" example:"check-up"`
+	DateTime       time.Time          `bson:"dateTime" json:"dateTime" example:"2025-07-17T10:00:00Z"`
+	Duration       int                `bson:"duration" json:"duration" example:30` // in minutes
+	Status         AppointmentStatus  `bson:"status" json:"status" example:"Scheduled"`
+	Location       string             `bson:"location" json:"location" example:"Room 101"`
+	Notes          string             `bson:"notes,omitempty" json:"notes,omitempty" example:"Patient complained of headache"`
+	PatientHistory string             `bson:"patientHistory,omitempty" json:"patientHistory,omitempty" example:"No significant medical history"`
+	CreatedBy      primitive.ObjectID `bson:"createdBy" json:"createdBy,omitempty"`
+	UpdatedBy      primitive.ObjectID `bson:"updatedBy" json:"updatedBy,omitempty"`
+	CreatedAt      time.Time          `bson:"createdAt" json:"createdAt"`
+	UpdatedAt      time.Time          `bson:"updatedAt" json:"updatedAt"`
 }
 
 type AppointmentDTO struct {
-	ID             string            `json:"id"`
-	PatientID      string            `json:"patientId" validate:"required,mongodb"`
-	DoctorID       string            `json:"doctorId" validate:"required,mongodb"`
-	Type           AppointmentType   `json:"type" validate:"required,oneof=check-up follow-up consultation procedure emergency"`
-	DateTime       time.Time         `json:"dateTime" validate:"required,datetime"`
-	Duration       int               `json:"duration" validate:"required,gt=0"`
-	Status         AppointmentStatus `json:"status" validate:"required,oneof=Scheduled Confirmed Completed Cancelled"`
-	Location       string            `json:"location" validate:"required,min=3,max=100"`
-	Notes          string            `json:"notes,omitempty" validate:"max=500"`
-	PatientHistory string            `json:"patientHistory,omitempty" validate:"max=1000"`
-	CreatedAt      time.Time         `json:"createdAt"`
-	UpdatedAt      time.Time         `json:"updatedAt"`
+	ID             string            `json:"id" example:"60d0fe4f53115a001f000001"`
+	PatientID      string            `json:"patientId" validate:"required,mongodb" example:"60d0fe4f53115a001f000002"`
+	DoctorID       string            `json:"doctorId" validate:"required,mongodb" example:"60d0fe4f53115a001f000003"`
+	Type           AppointmentType   `json:"type" validate:"required,oneof=check-up follow-up consultation procedure emergency" example:"check-up"`
+	DateTime       time.Time         `json:"dateTime" validate:"required,datetime" example:"2025-07-17T10:00:00Z"`
+	Duration       int               `json:"duration" validate:"required,gt=0" example:30`
+	Status         AppointmentStatus `json:"status" validate:"required,oneof=Scheduled Confirmed Completed Cancelled" example:"Scheduled"`
+	Location       string            `json:"location" validate:"required,min=3,max=100" example:"Room 101"`
+	Notes          string            `json:"notes,omitempty" validate:"max=500" example:"Patient complained of headache"`
+	PatientHistory string            `json:"patientHistory,omitempty" validate:"max=1000" example:"No significant medical history"`
+	CreatedAt      time.Time         `json:"createdAt" example:"2025-07-17T09:00:00Z"`
+	UpdatedAt      time.Time         `json:"updatedAt" example:"2025-07-17T09:00:00Z"`
 }
 
+// @Description	Detailed appointment information
+// @swagger:model
 type AppointmentDetailResponse struct {
 	Appointment AppointmentDTO    `json:"appointment"`
 	Patient     *PatientDTO       `json:"patient,omitempty"`

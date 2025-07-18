@@ -6,19 +6,21 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// @Description	Doctor object
+// @swagger:model
 type DoctorEntity struct {
-	ID           primitive.ObjectID `bson:"_id,omitempty"`
-	Name         string             `bson:"name"`
-	Specialty    string             `bson:"specialty"`
-	Phone        string             `bson:"phone"`
-	Email        string             `bson:"email"`
-	Availability []TimeSlot         `bson:"availability"`
-	CreatedBy    primitive.ObjectID `bson:"createdBy"`
-	UpdatedBy    primitive.ObjectID `bson:"updatedBy"`
-	IsDeleted    bool               `bson:"isDeleted"`
-	DeletedAt    *time.Time         `bson:"deletedAt,omitempty"`
-	CreatedAt    time.Time          `bson:"createdAt"`
-	UpdatedAt    time.Time          `bson:"updatedAt"`
+	ID           primitive.ObjectID `bson:"_id,omitempty" json:"id,omitempty" example:"60d0fe4f53115a001f000001"`
+	Name         string             `bson:"name" json:"name" example:"Dr. John Doe"`
+	Specialty    string             `bson:"specialty" json:"specialty" example:"Cardiology"`
+	Phone        string             `bson:"phone" json:"phone" example:"1234567890"`
+	Email        string             `bson:"email" json:"email" example:"john.doe@example.com"`
+	Availability []TimeSlot         `bson:"availability" json:"availability"`
+	CreatedBy    primitive.ObjectID `bson:"createdBy" json:"createdBy,omitempty"`
+	UpdatedBy    primitive.ObjectID `bson:"updatedBy" json:"updatedBy,omitempty"`
+	IsDeleted    bool               `bson:"isDeleted" json:"isDeleted" example:false`
+	DeletedAt    *time.Time         `bson:"deletedAt,omitempty" json:"deletedAt,omitempty"`
+	CreatedAt    time.Time          `bson:"createdAt" json:"createdAt"`
+	UpdatedAt    time.Time          `bson:"updatedAt" json:"updatedAt"`
 }
 
 type TimeSlot struct {
@@ -27,15 +29,17 @@ type TimeSlot struct {
 	EndTime   time.Time `bson:"endTime" json:"endTime"`
 }
 
+// @Description	Doctor data transfer object
+// @swagger:model
 type DoctorDTO struct {
-	ID           string     `json:"id"`
-	Name         string     `json:"name"`
-	Specialty    string     `json:"specialty"`
-	Phone        string     `json:"phone"`
-	Email        string     `json:"email"`
+	ID           string     `json:"id" example:"60d0fe4f53115a001f000001"`
+	Name         string     `json:"name" example:"Dr. John Doe"`
+	Specialty    string     `json:"specialty" example:"Cardiology"`
+	Phone        string     `json:"phone" example:"1234567890"`
+	Email        string     `json:"email" example:"john.doe@example.com"`
 	Availability []TimeSlot `json:"availability"`
-	CreatedAt    time.Time  `json:"createdAt"`
-	UpdatedAt    time.Time  `json:"updatedAt"`
+	CreatedAt    time.Time  `json:"createdAt" example:"2025-07-17T09:00:00Z"`
+	UpdatedAt    time.Time  `json:"updatedAt" example:"2025-07-17T09:00:00Z"`
 }
 
 func (d DoctorDTO) ToEntity() DoctorEntity {
@@ -65,20 +69,26 @@ func (d DoctorEntity) ToDTO() DoctorDTO {
 	}
 }
 
+// @Description	Request body for creating a new doctor
+// @swagger:model
 type CreateDoctorRequet struct {
-	Name      string `json:"name" validate:"required,min=3,max=100"`
-	Specialty string `json:"specialty" validate:"required,min=3,max=100"`
-	Phone     string `json:"phone" validate:"required,e164"`
-	Email     string `json:"email" validate:"required,email"`
+	Name      string `json:"name" validate:"required,min=3,max=100" example:"Dr. Jane Smith"`
+	Specialty string `json:"specialty" validate:"required,min=3,max=100" example:"Pediatrics"`
+	Phone     string `json:"phone" validate:"required,e164" example:"+1987654321"`
+	Email     string `json:"email" validate:"required,email" example:"jane.smith@example.com"`
 }
 
+// @Description	Request body for updating an existing doctor
+// @swagger:model
 type UpdateDoctorRequet struct {
-	Name      string `json:"name" validate:"required,min=3,max=100"`
-	Specialty string `json:"specialty" validate:"required,min=3,max=100"`
-	Phone     string `json:"phone" validate:"required,e164"`
-	Email     string `json:"email" validate:"required,email"`
+	Name      string `json:"name" validate:"required,min=3,max=100" example:"Dr. Jane Smith-Doe"`
+	Specialty string `json:"specialty" validate:"required,min=3,max=100" example:"Pediatrics"`
+	Phone     string `json:"phone" validate:"required,e164" example:"+1987654321"`
+	Email     string `json:"email" validate:"required,email" example:"jane.smith@example.com"`
 }
 
+// @Description	Detailed doctor information including recent patients
+// @swagger:model
 type DoctorDetailResponse struct {
 	Doctor         *DoctorDTO   `json:"doctor"`
 	RecentPatients []PatientDTO `json:"recentPatients,omitempty"`

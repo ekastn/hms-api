@@ -57,7 +57,7 @@ func (a *App) setupRoutes() {
 	medicalRecordHandler := handlers.NewMedicalRecordHandler(medicalRecordService)
 	dashboardHandler := handlers.NewDashboardHandler(dashboardService)
 	authHandler := handlers.NewAuthHandler(authService)
-	userHandler := handlers.NewUserHandler(userService, authService)
+	userHandler := handlers.NewUserHandler(userService)
 
 	api := a.f.Group("/api")
 
@@ -116,13 +116,13 @@ func (a *App) setupRoutes() {
 	api.Get("/health", healthCheck)
 }
 
-// @Summary Health check endpoint
-// @Description Checks if the server is healthy
-// @Tags Health
-// @Accept json
-// @Produce json
-// @Success 200 {object} string "OK"
-// @Router /health [get]
+// @Summary		Health check endpoint
+// @Description	Checks if the server is healthy
+// @Tags			Health
+// @Accept			json
+// @Produce		json
+// @Success		200	{object}	string	"OK"
+// @Router			/health [get]
 func healthCheck(c *fiber.Ctx) error {
-    return c.SendString("OK")
+	return c.SendString("OK")
 }

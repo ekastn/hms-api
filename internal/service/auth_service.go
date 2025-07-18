@@ -9,7 +9,6 @@ import (
 	"github.com/ekastn/hms-api/internal/repository"
 	"github.com/ekastn/hms-api/internal/utils"
 	"github.com/golang-jwt/jwt/v5"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // AuthService handles user authentication and JWT generation.
@@ -56,17 +55,6 @@ func (s *AuthService) Login(ctx context.Context, email, password string) (*domai
 		Token: token,
 		User:  userDTO,
 	}, nil
-}
-
-// CreateUser creates a new user with a hashed password.
-func (s *AuthService) CreateUser(ctx context.Context, user *domain.UserEntity) (primitive.ObjectID, error) {
-	hashedPassword, err := utils.HashPassword(user.Password)
-	if err != nil {
-		return primitive.NilObjectID, err
-	}
-	user.Password = string(hashedPassword)
-
-	return s.userRepo.Create(ctx, user)
 }
 
 // generateJWT creates a new JWT for a given user.

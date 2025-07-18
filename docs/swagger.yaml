@@ -225,6 +225,37 @@ definitions:
     - name
     - phone
     type: object
+  domain.CreateUserRequest:
+    description: Request body for creating a new user
+    properties:
+      email:
+        example: jane.doe@example.com
+        type: string
+      name:
+        example: Jane Doe
+        maxLength: 100
+        minLength: 3
+        type: string
+      password:
+        example: StrongPassword123
+        minLength: 8
+        type: string
+      role:
+        allOf:
+        - $ref: '#/definitions/domain.Role'
+        enum:
+        - Admin
+        - Doctor
+        - Nurse
+        - Receptionist
+        - Management
+        example: Receptionist
+    required:
+    - email
+    - name
+    - password
+    - role
+    type: object
   domain.DashboardResponse:
     description: Dashboard response containing statistics, recent activities, and
       upcoming appointments
@@ -523,6 +554,34 @@ definitions:
     - name
     - phone
     type: object
+  domain.UpdateUserRequest:
+    description: Request body for updating an existing user
+    properties:
+      email:
+        example: jane.doe@example.com
+        type: string
+      isActive:
+        type: boolean
+      name:
+        example: Jane Doe
+        maxLength: 100
+        minLength: 3
+        type: string
+      password:
+        example: NewStrongPassword123
+        minLength: 8
+        type: string
+      role:
+        allOf:
+        - $ref: '#/definitions/domain.Role'
+        enum:
+        - Admin
+        - Doctor
+        - Nurse
+        - Receptionist
+        - Management
+        example: Receptionist
+    type: object
   domain.UserDTO:
     properties:
       email:
@@ -533,33 +592,6 @@ definitions:
         type: string
       role:
         $ref: '#/definitions/domain.Role'
-    type: object
-  domain.UserEntity:
-    description: User object Used for creating and updating users.
-    properties:
-      createdAt:
-        type: string
-      email:
-        example: john.doe@example.com
-        type: string
-      id:
-        example: 60d0fe4f53115a001f000001
-        type: string
-      isActive:
-        type: boolean
-      name:
-        example: John Doe
-        type: string
-      password:
-        description: Stores the hashed password
-        example: securepassword123
-        type: string
-      role:
-        allOf:
-        - $ref: '#/definitions/domain.Role'
-        example: Admin
-      updatedAt:
-        type: string
     type: object
   utils.ErrorResponse:
     properties:
@@ -1587,16 +1619,24 @@ paths:
         name: user
         required: true
         schema:
-          $ref: '#/definitions/domain.UserEntity'
+          $ref: '#/definitions/domain.CreateUserRequest'
       produces:
       - application/json
       responses:
         "201":
           description: User created successfully
           schema:
-            $ref: '#/definitions/utils.SuccessResponse'
+            allOf:
+            - $ref: '#/definitions/utils.SuccessResponse'
+            - properties:
+                data:
+                  properties:
+                    id:
+                      type: string
+                  type: object
+              type: object
         "400":
-          description: Invalid request body
+          description: Invalid request body or validation failed
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
         "500":
@@ -1685,7 +1725,7 @@ paths:
         name: user
         required: true
         schema:
-          $ref: '#/definitions/domain.UserEntity'
+          $ref: '#/definitions/domain.UpdateUserRequest'
       produces:
       - application/json
       responses:
@@ -1694,7 +1734,7 @@ paths:
           schema:
             $ref: '#/definitions/utils.SuccessResponse'
         "400":
-          description: Invalid request body
+          description: Invalid request body or validation failed
           schema:
             $ref: '#/definitions/utils.ErrorResponse'
         "500":

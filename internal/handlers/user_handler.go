@@ -14,8 +14,8 @@ type UserHandler struct {
 }
 
 // NewUserHandler creates a new UserHandler.
-func NewUserHandler(userService *service.UserService, authService *service.AuthService) *UserHandler {
-	return &UserHandler{userService, authService}
+func NewUserHandler(userService *service.UserService) *UserHandler {
+	return &UserHandler{userService: userService}
 }
 
 // HandleGetAllUsers handles the request to get all users.
@@ -70,25 +70,28 @@ func (h *UserHandler) HandleGetUserByID(c *fiber.Ctx) error {
 //	@Accept			json
 //	@Produce		json
 //	@Security		ApiKeyAuth
-//	@Param			user	body		domain.UserEntity		true	"User object to be created"
-//	@Success		201		{object}	utils.SuccessResponse	"User created successfully"
-//	@Failure		400		{object}	utils.ErrorResponse		"Invalid request body"
-//	@Failure		500		{object}	utils.ErrorResponse		"Failed to create user"
+//	@Param			user	body		domain.CreateUserRequest						true	"User object to be created"
+//	@Success		201		{object}	utils.SuccessResponse{data=object{id=string}}	"User created successfully"
+//	@Failure		400		{object}	utils.ErrorResponse								"Invalid request body or validation failed"
+//	@Failure		500		{object}	utils.ErrorResponse								"Failed to create user"
 //	@Router			/users [post]
 func (h *UserHandler) HandleCreateUser(c *fiber.Ctx) error {
-	var user domain.UserEntity
-	if err := c.BodyParser(&user); err != nil {
+	var req domain.CreateUserRequest
+	if err := c.BodyParser(&req); err != nil {
 		return utils.ErrorResponseJSON(c, fiber.StatusBadRequest, "Invalid request body", nil)
 	}
 
-	// Validation can be added here
+	validationErrors := utils.ValidateStruct(req)
+	if validationErrors != nil {
+		return utils.ErrorResponseJSON(c, fiber.StatusBadRequest, "Validation failed", validationErrors)
+	}
 
-	_, err := h.authService.CreateUser(c.Context(), &user)
+	id, err := h.userService.CreateUser(c.Context(), &req)
 	if err != nil {
 		return utils.ErrorResponseJSON(c, fiber.StatusInternalServerError, "Failed to create user", err.Error())
 	}
 
-	return utils.ResponseJSON(c, fiber.StatusCreated, "User created successfully", nil)
+	return utils.ResponseJSON(c, fiber.StatusCreated, "User created successfully", fiber.Map{"id": id})
 }
 
 // HandleUpdateUser handles the request to update a user.
@@ -99,20 +102,25 @@ func (h *UserHandler) HandleCreateUser(c *fiber.Ctx) error {
 //	@Accept			json
 //	@Produce		json
 //	@Security		ApiKeyAuth
-//	@Param			id		path		string					true	"User ID"
-//	@Param			user	body		domain.UserEntity		true	"User object with updated fields"
-//	@Success		204		{object}	utils.SuccessResponse	"User updated successfully"
-//	@Failure		400		{object}	utils.ErrorResponse		"Invalid request body"
-//	@Failure		500		{object}	utils.ErrorResponse		"Failed to update user"
+//	@Param			id		path		string						true	"User ID"
+//	@Param			user	body		domain.UpdateUserRequest	true	"User object with updated fields"
+//	@Success		204		{object}	utils.SuccessResponse		"User updated successfully"
+//	@Failure		400		{object}	utils.ErrorResponse			"Invalid request body or validation failed"
+//	@Failure		500		{object}	utils.ErrorResponse			"Failed to update user"
 //	@Router			/users/{id} [put]
 func (h *UserHandler) HandleUpdateUser(c *fiber.Ctx) error {
 	id := c.Params("id")
-	var user domain.UserEntity
-	if err := c.BodyParser(&user); err != nil {
+	var req domain.UpdateUserRequest
+	if err := c.BodyParser(&req); err != nil {
 		return utils.ErrorResponseJSON(c, fiber.StatusBadRequest, "Invalid request body", nil)
 	}
 
-	if err := h.userService.UpdateUser(c.Context(), id, &user); err != nil {
+	validationErrors := utils.ValidateStruct(req)
+	if validationErrors != nil {
+		return utils.ErrorResponseJSON(c, fiber.StatusBadRequest, "Validation failed", validationErrors)
+	}
+
+	if err := h.userService.UpdateUser(c.Context(), id, &req); err != nil {
 		return utils.ErrorResponseJSON(c, fiber.StatusInternalServerError, "Failed to update user", err.Error())
 	}
 

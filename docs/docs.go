@@ -1669,7 +1669,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/domain.UserEntity"
+                            "$ref": "#/definitions/domain.CreateUserRequest"
                         }
                     }
                 ],
@@ -1677,11 +1677,28 @@ const docTemplate = `{
                     "201": {
                         "description": "User created successfully",
                         "schema": {
-                            "$ref": "#/definitions/utils.SuccessResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "string"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
-                        "description": "Invalid request body",
+                        "description": "Invalid request body or validation failed",
                         "schema": {
                             "$ref": "#/definitions/utils.ErrorResponse"
                         }
@@ -1786,7 +1803,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/domain.UserEntity"
+                            "$ref": "#/definitions/domain.UpdateUserRequest"
                         }
                     }
                 ],
@@ -1798,7 +1815,7 @@ const docTemplate = `{
                         }
                     },
                     "400": {
-                        "description": "Invalid request body",
+                        "description": "Invalid request body or validation failed",
                         "schema": {
                             "$ref": "#/definitions/utils.ErrorResponse"
                         }
@@ -2146,6 +2163,48 @@ const docTemplate = `{
                 "phone": {
                     "type": "string",
                     "example": "+1234567890"
+                }
+            }
+        },
+        "domain.CreateUserRequest": {
+            "description": "Request body for creating a new user",
+            "type": "object",
+            "required": [
+                "email",
+                "name",
+                "password",
+                "role"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "example": "jane.doe@example.com"
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 3,
+                    "example": "Jane Doe"
+                },
+                "password": {
+                    "type": "string",
+                    "minLength": 8,
+                    "example": "StrongPassword123"
+                },
+                "role": {
+                    "enum": [
+                        "Admin",
+                        "Doctor",
+                        "Nurse",
+                        "Receptionist",
+                        "Management"
+                    ],
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/domain.Role"
+                        }
+                    ],
+                    "example": "Receptionist"
                 }
             }
         },
@@ -2553,6 +2612,45 @@ const docTemplate = `{
                 }
             }
         },
+        "domain.UpdateUserRequest": {
+            "description": "Request body for updating an existing user",
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "example": "jane.doe@example.com"
+                },
+                "isActive": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 3,
+                    "example": "Jane Doe"
+                },
+                "password": {
+                    "type": "string",
+                    "minLength": 8,
+                    "example": "NewStrongPassword123"
+                },
+                "role": {
+                    "enum": [
+                        "Admin",
+                        "Doctor",
+                        "Nurse",
+                        "Receptionist",
+                        "Management"
+                    ],
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/domain.Role"
+                        }
+                    ],
+                    "example": "Receptionist"
+                }
+            }
+        },
         "domain.UserDTO": {
             "type": "object",
             "properties": {
@@ -2567,46 +2665,6 @@ const docTemplate = `{
                 },
                 "role": {
                     "$ref": "#/definitions/domain.Role"
-                }
-            }
-        },
-        "domain.UserEntity": {
-            "description": "User object Used for creating and updating users.",
-            "type": "object",
-            "properties": {
-                "createdAt": {
-                    "type": "string"
-                },
-                "email": {
-                    "type": "string",
-                    "example": "john.doe@example.com"
-                },
-                "id": {
-                    "type": "string",
-                    "example": "60d0fe4f53115a001f000001"
-                },
-                "isActive": {
-                    "type": "boolean"
-                },
-                "name": {
-                    "type": "string",
-                    "example": "John Doe"
-                },
-                "password": {
-                    "description": "Stores the hashed password",
-                    "type": "string",
-                    "example": "securepassword123"
-                },
-                "role": {
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/domain.Role"
-                        }
-                    ],
-                    "example": "Admin"
-                },
-                "updatedAt": {
-                    "type": "string"
                 }
             }
         },

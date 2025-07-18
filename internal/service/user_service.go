@@ -2,9 +2,11 @@ package service
 
 import (
 	"context"
+	"errors"
 
 	"github.com/ekastn/hms-api/internal/domain"
 	"github.com/ekastn/hms-api/internal/repository"
+	"github.com/ekastn/hms-api/internal/utils"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -61,12 +63,31 @@ func (s *UserService) GetUserByID(ctx context.Context, id string) (*domain.UserD
 }
 
 // UpdateUser updates a user's details (e.g., name, role).
-func (s *UserService) UpdateUser(ctx context.Context, id string, user *domain.UserEntity) error {
+func (s *UserService) UpdateUser(ctx context.Context, id string, req *domain.UpdateUserRequest) error {
 	objID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return err
 	}
-	return s.userRepo.Update(ctx, objID, user)
+
+	existingUser, err := s.userRepo.GetByID(ctx, objID)
+	if err != nil {
+		return err
+	}
+	if existingUser == nil {
+		return errors.New("user not found")
+	}
+
+	updatedUser := req.ToEntity(existingUser)
+
+	if req.Password != "" {
+		hashedPassword, err := utils.HashPassword(req.Password)
+		if err != nil {
+			return err
+		}
+		updatedUser.Password = string(hashedPassword)
+	}
+
+	return s.userRepo.Update(ctx, objID, updatedUser)
 }
 
 // DeactivateUser marks a user as inactive.
@@ -76,4 +97,21 @@ func (s *UserService) DeactivateUser(ctx context.Context, id string) error {
 		return err
 	}
 	return s.userRepo.Deactivate(ctx, objID)
+}
+
+// CreateUser creates a new user with a hashed password.
+func (s *UserService) CreateUser(ctx context.Context, req *domain.CreateUserRequest) (string, error) {
+	hashedPassword, err := utils.HashPassword(req.Password)
+	if err != nil {
+		return "", err
+	}
+
+	user := req.ToEntity()
+	user.Password = string(hashedPassword)
+
+	id, err := s.userRepo.Create(ctx, user)
+	if err != nil {
+		return "", err
+	}
+	return id.Hex(), nil
 }

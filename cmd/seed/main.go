@@ -2,21 +2,19 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"time"
 
 	"github.com/ekastn/hms-api/internal/env"
+	"github.com/ekastn/hms-api/internal/repository"
 	"github.com/ekastn/hms-api/internal/seed"
+	"github.com/ekastn/hms-api/internal/service"
 	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 func main() {
-	// NOTE: This seeder is for development purposes only.
-	// The initial admin user is now created on application startup.
-
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatal("Error loading .env file")
@@ -46,12 +44,21 @@ func main() {
 	dbName := env.GetString("MONGO_DB", "test_db")
 	db := client.Database(dbName)
 
-	seeder := seed.NewSeeder(db)
-	fmt.Println("Starting database seeding...")
+	userRepo := repository.NewUserRepository(db.Collection("users"))
+	doctorRepo := repository.NewDoctorRepository(db.Collection("doctors"))
+	patientRepo := repository.NewPatientRepository(db.Collection("patients"))
+	appointmentRepo := repository.NewAppointmentRepository(db.Collection("appointments"))
+	medicalRecordRepo := repository.NewMedicalRecordRepository(db.Collection("medical_records"))
+	activityRepo := repository.NewActivityRepository(db.Collection("activities"))
 
-	if err := seeder.SeedAll(context.Background()); err != nil {
-		log.Fatalf("Failed to seed database: %v", err)
-	}
+	activityService := service.NewActivityService(activityRepo)
+	userService := service.NewUserService(userRepo)
+	doctorService := service.NewDoctorService(doctorRepo, appointmentRepo, patientRepo, activityService)
+	patientService := service.NewPatientService(patientRepo, appointmentRepo, medicalRecordRepo, activityService)
+	appointmentService := service.NewAppointmentService(appointmentRepo, patientRepo, medicalRecordRepo, activityService, client)
+	medicalRecordService := service.NewMedicalRecordService(medicalRecordRepo, activityService)
 
-	fmt.Println("Database seeded successfully!")
+	seeder := seed.NewSeeder(db, userService, doctorService, patientService, appointmentService, medicalRecordService)
+
+	seeder.Seed(context.Background())
 }

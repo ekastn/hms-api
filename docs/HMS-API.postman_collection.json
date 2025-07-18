@@ -1,0 +1,1016 @@
+{
+  "info": {
+    "name": "Hospital Management System API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_postman_id": "a1b2c3d4-e5f6-7890-1234-56789abcdef0"
+  },
+  "item": [
+    {
+      "name": "Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/health",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "health"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{
+    "email": "admin@hms.com",
+    "password": "password123"
+}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test("Status code is 200", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const response = pm.response.json();",
+                  "pm.collectionVariables.set("token", response.data.token);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Dashboard",
+      "item": [
+        {
+          "name": "Get Dashboard Data",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/dashboard/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "dashboard",
+                ""
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "Get All Users",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/users/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                ""
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get User by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/users/{{user_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "{{user_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{
+    "name": "New User",
+    "email": "new.user@example.com",
+    "password": "password123",
+    "role": "Receptionist"
+}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/users/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                ""
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update User",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{
+    "name": "New User Updated",
+    "email": "new.user.updated@example.com",
+    "role": "Nurse"
+}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/users/{{user_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "{{user_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Deactivate User",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/users/{{user_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "{{user_id}}"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Patients",
+      "item": [
+        {
+          "name": "Get All Patients",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/patients/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "patients",
+                ""
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Patient by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/patients/{{patient_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "patients",
+                "{{patient_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Patient Detail",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/patients/{{patient_id}}/detail",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "patients",
+                "{{patient_id}}",
+                "detail"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Patient",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{
+    "name": "Bambang Pamungkas",
+    "age": 40,
+    "gender": "Male",
+    "phone": "+6281234567890",
+    "email": "bambang.pamungkas@example.com",
+    "address": "Jl. Jendral Sudirman No. 1, Jakarta"
+}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/patients/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "patients",
+                ""
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Patient",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{
+    "name": "Bambang Pamungkas Updated",
+    "age": 41,
+    "gender": "Male",
+    "phone": "+6281234567890",
+    "email": "bambang.pamungkas.updated@example.com",
+    "address": "Jl. Jendral Sudirman No. 1, Jakarta Pusat"
+}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/patients/{{patient_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "patients",
+                "{{patient_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Patient",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/patients/{{patient_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "patients",
+                "{{patient_id}}"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Doctors",
+      "item": [
+        {
+          "name": "Get All Doctors",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/doctors/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "doctors",
+                ""
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Doctor by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/doctors/{{doctor_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "doctors",
+                "{{doctor_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Doctor Detail",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/doctors/{{doctor_id}}/detail",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "doctors",
+                "{{doctor_id}}",
+                "detail"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Doctor",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{
+    "name": "Dr. Susi Susanti",
+    "specialty": "Umum",
+    "phone": "+6281234567891",
+    "email": "susi.susanti@example.com"
+}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/doctors/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "doctors",
+                ""
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Doctor",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{
+    "name": "Dr. Susi Susanti Updated",
+    "specialty": "Anak",
+    "phone": "+6281234567891",
+    "email": "susi.susanti.updated@example.com"
+}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/doctors/{{doctor_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "doctors",
+                "{{doctor_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Doctor",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/doctors/{{doctor_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "doctors",
+                "{{doctor_id}}"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Appointments",
+      "item": [
+        {
+          "name": "Get All Appointments",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/appointments/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "appointments",
+                ""
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Appointment by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/appointments/{{appointment_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "appointments",
+                "{{appointment_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Appointment Detail",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/appointments/{{appointment_id}}/detail",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "appointments",
+                "{{appointment_id}}",
+                "detail"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Appointment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{
+    "patientId": "{{patient_id}}",
+    "doctorId": "{{doctor_id}}",
+    "type": "check-up",
+    "dateTime": "2025-08-01T10:00:00Z",
+    "duration": 30,
+    "status": "Scheduled",
+    "location": "Room 101",
+    "notes": "Konsultasi awal"
+}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/appointments/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "appointments",
+                ""
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Appointment",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{
+    "patientId": "{{patient_id}}",
+    "doctorId": "{{doctor_id}}",
+    "type": "follow-up",
+    "dateTime": "2025-08-02T11:00:00Z",
+    "duration": 45,
+    "status": "Confirmed",
+    "location": "Room 102",
+    "notes": "Jadwal ulang konsultasi"
+}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/appointments/{{appointment_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "appointments",
+                "{{appointment_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Appointment",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/appointments/{{appointment_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "appointments",
+                "{{appointment_id}}"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Medical Records",
+      "item": [
+        {
+          "name": "Get All Medical Records",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/records/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "records",
+                ""
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Medical Record by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/records/{{record_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "records",
+                "{{record_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Medical Records by Patient ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/records/patient/{{patient_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "records",
+                "patient",
+                "{{patient_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Medical Records by Date Range",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/records/date-range?start=2025-01-01T00:00:00Z&end=2025-12-31T23:59:59Z",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "records",
+                "date-range"
+              ],
+              "query": [
+                {
+                  "key": "start",
+                  "value": "2025-01-01T00:00:00Z"
+                },
+                {
+                  "key": "end",
+                  "value": "2025-12-31T23:59:59Z"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Medical Record",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{
+    "patientId": "{{patient_id}}",
+    "doctorId": "{{doctor_id}}",
+    "recordType": "checkup",
+    "description": "Pasien mengeluh pusing dan mual.",
+    "diagnosis": "Vertigo",
+    "treatment": "Diberikan obat anti-mual dan disarankan istirahat.",
+    "notes": "Pasien diminta untuk kembali jika gejala tidak membaik."
+}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/records/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "records",
+                ""
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Medical Record",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{
+    "recordType": "followup",
+    "description": "Gejala pusing berkurang.",
+    "diagnosis": "Vertigo (membaik)",
+    "treatment": "Lanjutkan obat dan istirahat.",
+    "notes": "Pasien akan kontrol kembali minggu depan."
+}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/records/{{record_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "records",
+                "{{record_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Medical Record",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/records/{{record_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "records",
+                "{{record_id}}"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:5021",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "user_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "patient_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "doctor_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "appointment_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "record_id",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}

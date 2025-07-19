@@ -611,7 +611,6 @@ definitions:
       success:
         type: boolean
     type: object
-host: localhost:5021
 info:
   contact:
     email: eka@voixes.studio

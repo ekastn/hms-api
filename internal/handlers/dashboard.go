@@ -33,5 +33,5 @@ func (h *DashboardHandler) GetDashboardData(c *fiber.Ctx) error {
 		return utils.ErrorResponseJSON(c, fiber.StatusInternalServerError, "Failed to get dashboard data", nil)
 	}
 
-	return c.JSON(data)
+	return utils.ResponseJSON(c, fiber.StatusOK, "Dashboard data retrieved successfully", data)
 }

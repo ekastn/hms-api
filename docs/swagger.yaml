@@ -75,7 +75,6 @@ definitions:
         example: "2025-07-17T09:00:00Z"
         type: string
     required:
-    - dateTime
     - doctorId
     - duration
     - location
@@ -119,6 +118,64 @@ definitions:
     - AppointmentTypeConsultation
     - AppointmentTypeProcedure
     - AppointmentTypeEmergency
+  domain.ChangePasswordRequest:
+    description: Request body for changing user password
+    properties:
+      confirmPassword:
+        example: VeryStrongNewPassword123
+        type: string
+      newPassword:
+        example: VeryStrongNewPassword123
+        minLength: 8
+        type: string
+    required:
+    - confirmPassword
+    - newPassword
+    type: object
+  domain.CreateAppointmentRequest:
+    description: Request body for creating a new appointment
+    properties:
+      dateTime:
+        example: "2025-07-17T10:00:00Z"
+        type: string
+      doctorId:
+        example: 60d0fe4f53115a001f000003
+        type: string
+      duration:
+        type: integer
+      location:
+        example: Room 101
+        maxLength: 100
+        minLength: 3
+        type: string
+      notes:
+        example: Patient complained of headache
+        maxLength: 500
+        type: string
+      patientHistory:
+        example: No significant medical history
+        maxLength: 1000
+        type: string
+      patientId:
+        example: 60d0fe4f53115a001f000002
+        type: string
+      type:
+        allOf:
+        - $ref: '#/definitions/domain.AppointmentType'
+        enum:
+        - check-up
+        - follow-up
+        - consultation
+        - procedure
+        - emergency
+        example: check-up
+    required:
+    - doctorId
+    - duration
+    - location
+    - patientId
+    - type
+    type: object
   domain.CreateDoctorRequet:
     description: Request body for creating a new doctor
     properties:
@@ -461,6 +518,60 @@ definitions:
         example: Scheduled
         type: string
     type: object
+  domain.UpdateAppointmentRequest:
+    description: Request body for updating an existing appointment
+    properties:
+      dateTime:
+        example: "2025-07-17T10:00:00Z"
+        type: string
+      duration:
+        type: integer
+      location:
+        example: Room 101
+        maxLength: 100
+        minLength: 3
+        type: string
+      notes:
+        example: Patient complained of headache
+        maxLength: 500
+        type: string
+      patientHistory:
+        example: No significant medical history
+        type: string
+      status:
+        allOf:
+        - $ref: '#/definitions/domain.AppointmentStatus'
+        enum:
+        - Scheduled
+        - Confirmed
+        - Completed
+        - Cancelled
+        example: Scheduled
+      type:
+        allOf:
+        - $ref: '#/definitions/domain.AppointmentType'
+        enum:
+        - check-up
+        - follow-up
+        - consultation
+        - procedure
+        - emergency
+        example: check-up
+    type: object
+  domain.UpdateAppointmentStatusRequest:
+    description: Request body for updating appointment status
+    properties:
+      status:
+        allOf:
+        - $ref: '#/definitions/domain.AppointmentStatus'
+        enum:
+        - Scheduled
+        - Confirmed
+        - Completed
+        - Cancelled
+    required:
+    - status
+    type: object
   domain.UpdateDoctorRequet:
     description: Request body for updating an existing doctor
     properties:
@@ -567,10 +678,6 @@ definitions:
         maxLength: 100
         minLength: 3
         type: string
-      password:
-        example: NewStrongPassword123
-        minLength: 8
-        type: string
       role:
         allOf:
         - $ref: '#/definitions/domain.Role'
@@ -588,6 +695,8 @@ definitions:
         type: string
       id:
         type: string
+      isActive:
+        type: boolean
       name:
         type: string
       role:
@@ -624,6 +733,34 @@ info:
   title: HMS API Documentation
   version: "1.0"
 paths:
+  /activities:
+    get:
+      consumes:
+      - application/json
+      description: Get a list of all recorded activities. Admin access required.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Activities retrieved successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.SuccessResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/domain.Activity'
+                  type: array
+              type: object
+        "500":
+          description: Failed to retrieve activities
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get all activities
+      tags:
+      - Activities
   /appointments:
     get:
       consumes:
@@ -662,7 +799,7 @@ paths:
         name: appointment
         required: true
         schema:
-          $ref: '#/definitions/domain.AppointmentDTO'
+          $ref: '#/definitions/domain.CreateAppointmentRequest'
       produces:
       - application/json
       responses:
@@ -776,7 +913,7 @@ paths:
         name: appointment
         required: true
         schema:
-          $ref: '#/definitions/domain.AppointmentDTO'
+          $ref: '#/definitions/domain.UpdateAppointmentRequest'
       produces:
       - application/json
       responses:
@@ -836,6 +973,43 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Get detailed appointment information
+      tags:
+      - Appointments
+  /appointments/{id}/status:
+    put:
+      consumes:
+      - application/json
+      description: Update the status of an existing appointment.
+      parameters:
+      - description: Appointment ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: New status for the appointment
+        in: body
+        name: status
+        required: true
+        schema:
+          $ref: '#/definitions/domain.UpdateAppointmentStatusRequest'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Appointment status updated successfully
+          schema:
+            $ref: '#/definitions/utils.SuccessResponse'
+        "400":
+          description: Invalid request body or validation failed
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Failed to update appointment status
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Update appointment status
       tags:
       - Appointments
   /auth/login:
@@ -1743,6 +1917,43 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Update an existing user
+      tags:
+      - Users
+  /users/{id}/password:
+    put:
+      consumes:
+      - application/json
+      description: Change the password for a specific user. Admin access required.
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: New password details
+        in: body
+        name: password
+        required: true
+        schema:
+          $ref: '#/definitions/domain.ChangePasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Password changed successfully
+          schema:
+            $ref: '#/definitions/utils.SuccessResponse'
+        "400":
+          description: Invalid request body or validation failed
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+        "500":
+          description: Failed to change password
+          schema:
+            $ref: '#/definitions/utils.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Change user password
       tags:
       - Users
 securityDefinitions:

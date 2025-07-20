@@ -24,6 +24,55 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/activities": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Get a list of all recorded activities. Admin access required.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Activities"
+                ],
+                "summary": "Get all activities",
+                "responses": {
+                    "200": {
+                        "description": "Activities retrieved successfully",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/utils.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/domain.Activity"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to retrieve activities",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/appointments": {
             "get": {
                 "security": [
@@ -96,7 +145,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/domain.AppointmentDTO"
+                            "$ref": "#/definitions/domain.CreateAppointmentRequest"
                         }
                     }
                 ],
@@ -236,7 +285,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/domain.AppointmentDTO"
+                            "$ref": "#/definitions/domain.UpdateAppointmentRequest"
                         }
                     }
                 ],
@@ -369,6 +418,64 @@ const docTemplate = `{
                     },
                     "500": {
                         "description": "Failed to retrieve appointment details",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/appointments/{id}/status": {
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Update the status of an existing appointment.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Appointments"
+                ],
+                "summary": "Update appointment status",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Appointment ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "New status for the appointment",
+                        "name": "status",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/domain.UpdateAppointmentStatusRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Appointment status updated successfully",
+                        "schema": {
+                            "$ref": "#/definitions/utils.SuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request body or validation failed",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to update appointment status",
                         "schema": {
                             "$ref": "#/definitions/utils.ErrorResponse"
                         }
@@ -1869,6 +1976,64 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/users/{id}/password": {
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Change the password for a specific user. Admin access required.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Change user password",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "New password details",
+                        "name": "password",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/domain.ChangePasswordRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Password changed successfully",
+                        "schema": {
+                            "$ref": "#/definitions/utils.SuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request body or validation failed",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to change password",
+                        "schema": {
+                            "$ref": "#/definitions/utils.ErrorResponse"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -1902,7 +2067,6 @@ const docTemplate = `{
         "domain.AppointmentDTO": {
             "type": "object",
             "required": [
-                "dateTime",
                 "doctorId",
                 "duration",
                 "location",
@@ -2031,6 +2195,84 @@ const docTemplate = `{
                 "AppointmentTypeProcedure",
                 "AppointmentTypeEmergency"
             ]
+        },
+        "domain.ChangePasswordRequest": {
+            "description": "Request body for changing user password",
+            "type": "object",
+            "required": [
+                "confirmPassword",
+                "newPassword"
+            ],
+            "properties": {
+                "confirmPassword": {
+                    "type": "string",
+                    "example": "VeryStrongNewPassword123"
+                },
+                "newPassword": {
+                    "type": "string",
+                    "minLength": 8,
+                    "example": "VeryStrongNewPassword123"
+                }
+            }
+        },
+        "domain.CreateAppointmentRequest": {
+            "description": "Request body for creating a new appointment",
+            "type": "object",
+            "required": [
+                "doctorId",
+                "duration",
+                "location",
+                "patientId",
+                "type"
+            ],
+            "properties": {
+                "dateTime": {
+                    "type": "string",
+                    "example": "2025-07-17T10:00:00Z"
+                },
+                "doctorId": {
+                    "type": "string",
+                    "example": "60d0fe4f53115a001f000003"
+                },
+                "duration": {
+                    "type": "integer"
+                },
+                "location": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 3,
+                    "example": "Room 101"
+                },
+                "notes": {
+                    "type": "string",
+                    "maxLength": 500,
+                    "example": "Patient complained of headache"
+                },
+                "patientHistory": {
+                    "type": "string",
+                    "maxLength": 1000,
+                    "example": "No significant medical history"
+                },
+                "patientId": {
+                    "type": "string",
+                    "example": "60d0fe4f53115a001f000002"
+                },
+                "type": {
+                    "enum": [
+                        "check-up",
+                        "follow-up",
+                        "consultation",
+                        "procedure",
+                        "emergency"
+                    ],
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/domain.AppointmentType"
+                        }
+                    ],
+                    "example": "check-up"
+                }
+            }
         },
         "domain.CreateDoctorRequet": {
             "description": "Request body for creating a new doctor",
@@ -2494,6 +2736,85 @@ const docTemplate = `{
                 }
             }
         },
+        "domain.UpdateAppointmentRequest": {
+            "description": "Request body for updating an existing appointment",
+            "type": "object",
+            "properties": {
+                "dateTime": {
+                    "type": "string",
+                    "example": "2025-07-17T10:00:00Z"
+                },
+                "duration": {
+                    "type": "integer"
+                },
+                "location": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 3,
+                    "example": "Room 101"
+                },
+                "notes": {
+                    "type": "string",
+                    "maxLength": 500,
+                    "example": "Patient complained of headache"
+                },
+                "patientHistory": {
+                    "type": "string",
+                    "example": "No significant medical history"
+                },
+                "status": {
+                    "enum": [
+                        "Scheduled",
+                        "Confirmed",
+                        "Completed",
+                        "Cancelled"
+                    ],
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/domain.AppointmentStatus"
+                        }
+                    ],
+                    "example": "Scheduled"
+                },
+                "type": {
+                    "enum": [
+                        "check-up",
+                        "follow-up",
+                        "consultation",
+                        "procedure",
+                        "emergency"
+                    ],
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/domain.AppointmentType"
+                        }
+                    ],
+                    "example": "check-up"
+                }
+            }
+        },
+        "domain.UpdateAppointmentStatusRequest": {
+            "description": "Request body for updating appointment status",
+            "type": "object",
+            "required": [
+                "status"
+            ],
+            "properties": {
+                "status": {
+                    "enum": [
+                        "Scheduled",
+                        "Confirmed",
+                        "Completed",
+                        "Cancelled"
+                    ],
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/domain.AppointmentStatus"
+                        }
+                    ]
+                }
+            }
+        },
         "domain.UpdateDoctorRequet": {
             "description": "Request body for updating an existing doctor",
             "type": "object",
@@ -2629,11 +2950,6 @@ const docTemplate = `{
                     "minLength": 3,
                     "example": "Jane Doe"
                 },
-                "password": {
-                    "type": "string",
-                    "minLength": 8,
-                    "example": "NewStrongPassword123"
-                },
                 "role": {
                     "enum": [
                         "Admin",
@@ -2659,6 +2975,9 @@ const docTemplate = `{
                 },
                 "id": {
                     "type": "string"
+                },
+                "isActive": {
+                    "type": "boolean"
                 },
                 "name": {
                     "type": "string"

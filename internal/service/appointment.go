@@ -91,7 +91,7 @@ func (s *AppointmentService) GetAppointmentDetail(ctx context.Context, id string
 	return appointment.ToDetailDTO(patient, lastRecord), nil
 }
 
-func (s *AppointmentService) Create(ctx context.Context, appointment *domain.AppointmentEntity, creatorID primitive.ObjectID) (string, error) {
+func (s *AppointmentService) Create(ctx context.Context, req *domain.CreateAppointmentRequest, creatorID primitive.ObjectID) (string, error) {
 	// Start a session for transaction
 	session, err := s.mongoClient.StartSession()
 	if err != nil {
@@ -106,44 +106,25 @@ func (s *AppointmentService) Create(ctx context.Context, appointment *domain.App
 			return err
 		}
 
-		// Validate required fields
-		if appointment.PatientID == primitive.NilObjectID {
-			return errors.New("patient ID is required")
+		patientID, err := primitive.ObjectIDFromHex(req.PatientID)
+		if err != nil {
+			return fmt.Errorf("invalid patient ID format: %w", err)
+		}
+		doctorID, err := primitive.ObjectIDFromHex(req.DoctorID)
+		if err != nil {
+			return fmt.Errorf("invalid doctor ID format: %w", err)
 		}
 
-		if appointment.DoctorID == primitive.NilObjectID {
-			return errors.New("doctor ID is required")
-		}
-
-		if appointment.Type == "" {
-			return errors.New("appointment type is required")
-		}
-
-		// Validate appointment type
-		if !appointment.Type.IsValid() {
-			return fmt.Errorf("invalid appointment type: %s", appointment.Type)
-		}
-
-		if appointment.DateTime.IsZero() {
-			return errors.New("appointment date and time is required")
-		}
-
-		if appointment.Duration <= 0 {
-			return errors.New("appointment duration must be greater than 0")
-		}
-
-		// Set default status if not provided
-		if appointment.Status == "" {
-			appointment.Status = domain.AppointmentStatusScheduled
-		}
-
-		// Validate status
-		switch appointment.Status {
-		case domain.AppointmentStatusScheduled, domain.AppointmentStatusConfirmed,
-			domain.AppointmentStatusCompleted, domain.AppointmentStatusCancelled:
-			// valid status
-		default:
-			return fmt.Errorf("invalid appointment status: %s", appointment.Status)
+		appointment := domain.AppointmentEntity{
+			PatientID:      patientID,
+			DoctorID:       doctorID,
+			Type:           req.Type,
+			DateTime:       req.DateTime,
+			Duration:       req.Duration,
+			Location:       req.Location,
+			Notes:          req.Notes,
+			PatientHistory: req.PatientHistory,
+			Status:         domain.AppointmentStatusScheduled, // Default status for new appointments
 		}
 
 		// Check for existing appointment at the same time
@@ -174,14 +155,14 @@ func (s *AppointmentService) Create(ctx context.Context, appointment *domain.App
 		appointment.UpdatedBy = creatorID
 
 		// Create the appointment
-		id, err := s.appRepo.Create(sessionContext, appointment)
+		id, err := s.appRepo.Create(sessionContext, &appointment)
 		if err != nil {
 			return fmt.Errorf("failed to create appointment: %w", err)
 		}
 		newAppointmentID = id.Hex()
 
 		// Log activity
-		err = s.activityService.CreateActivity(sessionContext, domain.ActivityTypeAppointment, "New Appointment Scheduled", fmt.Sprintf("Appointment for patient %s with doctor %s on %s has been scheduled.", appointment.PatientID.Hex(), appointment.DoctorID.Hex(), appointment.DateTime.Format(time.RFC3339)))
+		err = s.activityService.CreateActivity(sessionContext, domain.ActivityTypeAppointment, "New Appointment Scheduled", fmt.Sprintf("Appointment for patient %s with doctor %s on %s has been scheduled.", req.PatientID, req.DoctorID, req.DateTime.Format(time.RFC3339)))
 		if err != nil {
 			// Log the error but don't block the appointment creation
 			fmt.Printf("Warning: failed to log activity for new appointment: %v\n", err)
@@ -197,7 +178,7 @@ func (s *AppointmentService) Create(ctx context.Context, appointment *domain.App
 	return newAppointmentID, nil
 }
 
-func (s *AppointmentService) Update(ctx context.Context, id string, appointment *domain.AppointmentEntity, updaterID primitive.ObjectID) error {
+func (s *AppointmentService) Update(ctx context.Context, id string, req *domain.UpdateAppointmentRequest, updaterID primitive.ObjectID) error {
 	appointmentID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return fmt.Errorf("invalid ID format: %w", err)
@@ -225,27 +206,32 @@ func (s *AppointmentService) Update(ctx context.Context, id string, appointment 
 			return errors.New("appointment not found")
 		}
 
-		// Validate status transition
-		if appointment.Status != "" && !appointment.Status.IsValid() {
-			return errors.New("invalid appointment status")
+		// Apply updates from request to existing appointment
+		updatedFields := req.ApplyUpdates(existingAppointment)
+
+		// Update UpdatedAt and UpdatedBy if any fields were changed
+		if updatedFields {
+			existingAppointment.UpdatedAt = time.Now()
+			existingAppointment.UpdatedBy = updaterID
 		}
 
-		// Preserve immutable fields
-		appointment.ID = appointmentID
-		appointment.CreatedAt = existingAppointment.CreatedAt
-		appointment.UpdatedAt = time.Now()
-		appointment.UpdatedBy = updaterID
+		// If date/time, duration, or status is being changed, re-check for conflicts
+		// This logic needs to use the potentially updated values from existingAppointment
+		// The condition should check if any of these fields were actually part of the request
+		// or if the status changed to something that requires re-checking.
+		// For simplicity, I'll keep the existing conflict check but ensure it uses the updated existingAppointment.
+		// A more robust solution might involve checking if req.DateTime != nil || req.Duration != nil || req.Status != nil
+		// and then performing the conflict check.
+		// However, the current logic already uses existingAppointment.DateTime, existingAppointment.Duration, existingAppointment.Status
+		// which will now reflect the applied updates.
 
-		// If date/time or doctor is being changed, check for conflicts
-		if !appointment.DateTime.Equal(existingAppointment.DateTime) ||
-			appointment.DoctorID != existingAppointment.DoctorID ||
-			appointment.Duration != existingAppointment.Duration {
-
-			endTime := appointment.DateTime.Add(time.Duration(appointment.Duration) * time.Minute)
-			existingAppointments, err := s.appRepo.GetByDoctorAndDateRange(
+		// Only check for conflicts if the status is not cancelled
+		if existingAppointment.Status != domain.AppointmentStatusCancelled {
+			endTime := existingAppointment.DateTime.Add(time.Duration(existingAppointment.Duration) * time.Minute)
+			conflictingAppointments, err := s.appRepo.GetByDoctorAndDateRange(
 				sessionContext,
-				appointment.DoctorID,
-				appointment.DateTime,
+				existingAppointment.DoctorID,
+				existingAppointment.DateTime,
 				endTime,
 			)
 			if err != nil {
@@ -253,23 +239,23 @@ func (s *AppointmentService) Update(ctx context.Context, id string, appointment 
 			}
 
 			// Filter out the current appointment and cancelled appointments
-			var conflictingAppointments []*domain.AppointmentEntity
-			for _, a := range existingAppointments {
+			var activeAppointments []*domain.AppointmentEntity
+			for _, a := range conflictingAppointments {
 				if a.ID != appointmentID && a.Status != domain.AppointmentStatusCancelled {
-					conflictingAppointments = append(conflictingAppointments, a)
+					activeAppointments = append(activeAppointments, a)
 				}
 			}
 
-			if len(conflictingAppointments) > 0 {
+			if len(activeAppointments) > 0 {
 				return errors.New("doctor is not available at the requested time")
 			}
 		}
 
-		if err := s.appRepo.Update(sessionContext, appointmentID, appointment); err != nil {
+		if err := s.appRepo.Update(sessionContext, appointmentID, existingAppointment); err != nil {
 			return fmt.Errorf("failed to update appointment: %w", err)
 		}
 
-		err = s.activityService.CreateActivity(sessionContext, domain.ActivityTypeAppointment, "Appointment Updated", fmt.Sprintf("Appointment %s has been updated. New status: %s.", id, appointment.Status))
+		err = s.activityService.CreateActivity(sessionContext, domain.ActivityTypeAppointment, "Appointment Updated", fmt.Sprintf("Appointment %s has been updated. New status: %s.", id, existingAppointment.Status))
 		if err != nil {
 			// Log the error but don't block the appointment update
 			fmt.Printf("Warning: failed to log activity for appointment update: %v\n", err)
@@ -318,6 +304,59 @@ func (s *AppointmentService) Delete(ctx context.Context, id string, updaterID pr
 	if err != nil {
 		// Log the error but don't block the appointment cancellation
 		log.Printf("Warning: failed to log activity for appointment cancellation: %v", err)
+	}
+
+	return nil
+}
+
+// UpdateStatus updates the status of an appointment.
+func (s *AppointmentService) UpdateStatus(ctx context.Context, id string, status domain.AppointmentStatus, updaterID primitive.ObjectID) error {
+	appointmentID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return fmt.Errorf("invalid ID format: %w", err)
+	}
+
+	// Start a session for transaction
+	session, err := s.mongoClient.StartSession()
+	if err != nil {
+		return fmt.Errorf("failed to start session: %w", err)
+	}
+	defer session.EndSession(ctx)
+
+	err = mongo.WithSession(ctx, session, func(sessionContext mongo.SessionContext) error {
+		if err = session.StartTransaction(); err != nil {
+			return err
+		}
+
+		// Get existing appointment
+		existingAppointment, err := s.appRepo.GetByID(sessionContext, appointmentID)
+		if err != nil {
+			return fmt.Errorf("failed to get appointment: %w", err)
+		}
+
+		if existingAppointment == nil {
+			return errors.New("appointment not found")
+		}
+
+		// Update only the status
+		existingAppointment.Status = status
+		existingAppointment.UpdatedAt = time.Now()
+		existingAppointment.UpdatedBy = updaterID
+
+		if err := s.appRepo.Update(sessionContext, appointmentID, existingAppointment); err != nil {
+			return fmt.Errorf("failed to update appointment status: %w", err)
+		}
+
+		err = s.activityService.CreateActivity(sessionContext, domain.ActivityTypeAppointment, "Appointment Status Updated", fmt.Sprintf("Appointment %s status changed to %s.", id, status))
+		if err != nil {
+			log.Printf("Warning: failed to log activity for appointment status update: %v", err)
+		}
+
+		return session.CommitTransaction(sessionContext)
+	})
+	if err != nil {
+		session.AbortTransaction(ctx)
+		return err
 	}
 
 	return nil

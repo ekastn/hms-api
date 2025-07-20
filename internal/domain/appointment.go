@@ -65,7 +65,7 @@ type AppointmentDTO struct {
 	PatientID      string            `json:"patientId" validate:"required,mongodb" example:"60d0fe4f53115a001f000002"`
 	DoctorID       string            `json:"doctorId" validate:"required,mongodb" example:"60d0fe4f53115a001f000003"`
 	Type           AppointmentType   `json:"type" validate:"required,oneof=check-up follow-up consultation procedure emergency" example:"check-up"`
-	DateTime       time.Time         `json:"dateTime" validate:"required,datetime" example:"2025-07-17T10:00:00Z"`
+	DateTime       time.Time         `json:"dateTime" example:"2025-07-17T10:00:00Z"`
 	Duration       int               `json:"duration" validate:"required,gt=0" example:30`
 	Status         AppointmentStatus `json:"status" validate:"required,oneof=Scheduled Confirmed Completed Cancelled" example:"Scheduled"`
 	Location       string            `json:"location" validate:"required,min=3,max=100" example:"Room 101"`
@@ -134,6 +134,7 @@ func (a *AppointmentEntity) ToDetailDTO(patient *PatientEntity, lastRecord *Medi
 		Appointment: a.ToDTO(),
 	}
 
+
 	if patient != nil {
 		patientDTO := patient.ToDTO()
 		detail.Patient = &patientDTO
@@ -145,4 +146,74 @@ func (a *AppointmentEntity) ToDetailDTO(patient *PatientEntity, lastRecord *Medi
 	}
 
 	return detail
+}
+
+// @Description	Request body for updating an existing appointment
+// @swagger:model
+type UpdateAppointmentRequest struct {
+	Type           *AppointmentType   `json:"type,omitempty" validate:"oneof=check-up follow-up consultation procedure emergency" example:"check-up"`
+	DateTime       *time.Time         `json:"dateTime,omitempty" example:"2025-07-17T10:00:00Z"`
+	Duration       *int               `json:"duration,omitempty" validate:"gt=0" example:30`
+	Status         *AppointmentStatus `json:"status,omitempty" validate:"oneof=Scheduled Confirmed Completed Cancelled" example:"Scheduled"`
+	Location       *string            `json:"location,omitempty" validate:"min=3,max=100" example:"Room 101"`
+	Notes          *string            `json:"notes,omitempty" validate:"max=500" example:"Patient complained of headache"`
+	PatientHistory *string            `json:"patientHistory,omitempty" example:"No significant medical history"`
+}
+
+// ApplyUpdates applies non-nil fields from UpdateAppointmentRequest to an AppointmentEntity.
+// It returns true if any field was updated, false otherwise.
+func (req *UpdateAppointmentRequest) ApplyUpdates(entity *AppointmentEntity) bool {
+	updated := false
+
+
+	if req.Type != nil {
+		entity.Type = *req.Type
+		updated = true
+	}
+	if req.DateTime != nil {
+		entity.DateTime = *req.DateTime
+		updated = true
+	}
+	if req.Duration != nil {
+		entity.Duration = *req.Duration
+		updated = true
+	}
+	if req.Status != nil {
+		entity.Status = *req.Status
+		updated = true
+	}
+	if req.Location != nil {
+		entity.Location = *req.Location
+		updated = true
+	}
+	if req.Notes != nil {
+		entity.Notes = *req.Notes
+		updated = true
+	}
+	if req.PatientHistory != nil {
+		entity.PatientHistory = *req.PatientHistory
+		updated = true
+	}
+
+
+	return updated
+}
+
+// @Description Request body for updating appointment status
+// @swagger:model
+type UpdateAppointmentStatusRequest struct {
+    Status AppointmentStatus `json:"status" validate:"required,oneof=Scheduled Confirmed Completed Cancelled"`
+}
+
+// @Description Request body for creating a new appointment
+// @swagger:model
+type CreateAppointmentRequest struct {
+	PatientID      string          `json:"patientId" validate:"required,mongodb" example:"60d0fe4f53115a001f000002"`
+	DoctorID       string          `json:"doctorId" validate:"required,mongodb" example:"60d0fe4f53115a001f000003"`
+	Type           AppointmentType `json:"type" validate:"required,oneof=check-up follow-up consultation procedure emergency" example:"check-up"`
+	DateTime       time.Time       `json:"dateTime" validate:"-" example:"2025-07-17T10:00:00Z"`
+	Duration       int             `json:"duration" validate:"required,gt=0" example:30`
+	Location       string          `json:"location" validate:"required,min=3,max=100" example:"Room 101"`
+	Notes          string          `json:"notes,omitempty" validate:"max=500" example:"Patient complained of headache"`
+	PatientHistory string          `json:"patientHistory,omitempty" validate:"max=1000" example:"No significant medical history"`
 }

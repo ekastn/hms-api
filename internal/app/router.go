@@ -103,6 +103,7 @@ func (a *App) setupRoutes() {
 	appointments.Get("/:id/detail", RBACMiddleware(domain.RoleAdmin, domain.RoleDoctor, domain.RoleNurse, domain.RoleReceptionist, domain.RoleManagement), appointmentHandler.GetAppointmentDetail) // New endpoint for detailed appointment info
 	appointments.Post("/", RBACMiddleware(domain.RoleAdmin, domain.RoleDoctor, domain.RoleNurse, domain.RoleReceptionist), appointmentHandler.Create)
 	appointments.Put("/:id", RBACMiddleware(domain.RoleAdmin, domain.RoleDoctor, domain.RoleNurse, domain.RoleReceptionist), appointmentHandler.Update)
+	appointments.Put("/:id/status", RBACMiddleware(domain.RoleAdmin, domain.RoleDoctor, domain.RoleNurse, domain.RoleReceptionist), appointmentHandler.HandleUpdateAppointmentStatus)
 	appointments.Delete("/:id", RBACMiddleware(domain.RoleAdmin, domain.RoleDoctor, domain.RoleNurse, domain.RoleReceptionist), appointmentHandler.Delete)
 
 	records := api.Group("/records", jwt)

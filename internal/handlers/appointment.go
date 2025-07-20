@@ -120,18 +120,18 @@ func (h *AppointmentHandler) GetAppointmentDetail(c *fiber.Ctx) error {
 //	@Accept			json
 //	@Produce		json
 //	@Security		ApiKeyAuth
-//	@Param			appointment	body		domain.AppointmentDTO							true	"Appointment object to be created"
+//	@Param			appointment	body		domain.CreateAppointmentRequest	true	"Appointment object to be created"
 //	@Success		201			{object}	utils.SuccessResponse{data=object{id=string}}	"Appointment created successfully"
-//	@Failure		400			{object}	utils.ErrorResponse								"Invalid request body or validation failed"
-//	@Failure		500			{object}	utils.ErrorResponse								"Failed to create appointment"
+//	@Failure		400			{object}	utils.ErrorResponse		"Invalid request body or validation failed"
+//	@Failure		500			{object}	utils.ErrorResponse		"Failed to create appointment"
 //	@Router			/appointments [post]
 func (h *AppointmentHandler) Create(c *fiber.Ctx) error {
-	var body domain.AppointmentDTO
-	if err := c.BodyParser(&body); err != nil {
+	var req domain.CreateAppointmentRequest
+	if err := c.BodyParser(&req); err != nil {
 		log.Printf("Error parsing request body: %v", err)
 		return utils.ErrorResponseJSON(c, fiber.StatusBadRequest, "Invalid request body", nil)
 	}
-	validationErrors := utils.ValidateStruct(body)
+	validationErrors := utils.ValidateStruct(req)
 	if validationErrors != nil { // Check if there are any validation errors
 		return utils.ErrorResponseJSON(c, fiber.StatusBadRequest, "Validation failed", validationErrors)
 	}
@@ -141,15 +141,8 @@ func (h *AppointmentHandler) Create(c *fiber.Ctx) error {
 		return utils.ErrorResponseJSON(c, fiber.StatusInternalServerError, "Invalid user ID", nil)
 	}
 
-	// Convert DTO to Entity
-	appointment, err := body.ToEntity()
-	if err != nil {
-		log.Printf("Error converting DTO to entity: %v", err)
-		return utils.ErrorResponseJSON(c, fiber.StatusBadRequest, err.Error(), nil)
-	}
-
 	// Create the appointment
-	id, err := h.appointmentService.Create(c.Context(), &appointment, creatorID)
+	id, err := h.appointmentService.Create(c.Context(), &req, creatorID)
 	if err != nil {
 		log.Printf("Error creating appointment: %v", err)
 		return utils.ErrorResponseJSON(c, fiber.StatusInternalServerError, err.Error(), nil)
@@ -167,7 +160,7 @@ func (h *AppointmentHandler) Create(c *fiber.Ctx) error {
 //	@Produce		json
 //	@Security		ApiKeyAuth
 //	@Param			id			path		string					true	"Appointment ID"
-//	@Param			appointment	body		domain.AppointmentDTO	true	"Appointment object with updated fields"
+//	@Param			appointment	body		domain.UpdateAppointmentRequest	true	"Appointment object with updated fields"
 //	@Success		204			{object}	utils.SuccessResponse	"Appointment updated successfully"
 //	@Failure		400			{object}	utils.ErrorResponse		"Invalid request body or validation failed"
 //	@Failure		500			{object}	utils.ErrorResponse		"Failed to update appointment"
@@ -178,12 +171,12 @@ func (h *AppointmentHandler) Update(c *fiber.Ctx) error {
 		return utils.ResponseJSON(c, fiber.StatusBadRequest, "Appointment ID is required", nil)
 	}
 
-	var body domain.AppointmentDTO
-	if err := c.BodyParser(&body); err != nil {
+	var req domain.UpdateAppointmentRequest
+	if err := c.BodyParser(&req); err != nil {
 		log.Printf("Error parsing request body: %v", err)
 		return utils.ErrorResponseJSON(c, fiber.StatusBadRequest, "Invalid request body", nil)
 	}
-	validationErrors := utils.ValidateStruct(body)
+	validationErrors := utils.ValidateStruct(req)
 	if validationErrors != nil { // Check if there are any validation errors
 		return utils.ErrorResponseJSON(c, fiber.StatusBadRequest, "Validation failed", validationErrors)
 	}
@@ -193,13 +186,7 @@ func (h *AppointmentHandler) Update(c *fiber.Ctx) error {
 		return utils.ErrorResponseJSON(c, fiber.StatusInternalServerError, "Invalid user ID", nil)
 	}
 
-	appointment, err := body.ToEntity()
-	if err != nil {
-		log.Printf("Error converting DTO to entity: %v", err)
-		return utils.ErrorResponseJSON(c, fiber.StatusBadRequest, err.Error(), nil)
-	}
-
-	err = h.appointmentService.Update(c.Context(), id, &appointment, updaterID)
+	err = h.appointmentService.Update(c.Context(), id, &req, updaterID)
 	if err != nil {
 		log.Printf("Error updating appointment: %v", err)
 		return utils.ErrorResponseJSON(c, fiber.StatusInternalServerError, err.Error(), nil)
@@ -239,4 +226,49 @@ func (h *AppointmentHandler) Delete(c *fiber.Ctx) error {
 	}
 
 	return utils.ResponseJSON(c, fiber.StatusNoContent, "Appointment cancelled successfully", nil)
+}
+
+// HandleUpdateAppointmentStatus handles the request to update an appointment's status.
+//
+//	@Summary		Update appointment status
+//	@Description	Update the status of an existing appointment.
+//	@Tags			Appointments
+//	@Accept			json
+//	@Produce		json
+//	@Security		ApiKeyAuth
+//	@Param			id			path		string					true	"Appointment ID"
+//	@Param			status	body		domain.UpdateAppointmentStatusRequest	true	"New status for the appointment"
+//	@Success		204			{object}	utils.SuccessResponse	"Appointment status updated successfully"
+//	@Failure		400			{object}	utils.ErrorResponse		"Invalid request body or validation failed"
+//	@Failure		500			{object}	utils.ErrorResponse		"Failed to update appointment status"
+//	@Router			/appointments/{id}/status [put]
+func (h *AppointmentHandler) HandleUpdateAppointmentStatus(c *fiber.Ctx) error {
+	id := c.Params("id")
+	if id == "" {
+		return utils.ErrorResponseJSON(c, fiber.StatusBadRequest, "Appointment ID is required", nil)
+	}
+
+	var req domain.UpdateAppointmentStatusRequest
+	if err := c.BodyParser(&req); err != nil {
+		log.Printf("Error parsing request body for status update: %v", err)
+		return utils.ErrorResponseJSON(c, fiber.StatusBadRequest, "Invalid request body", nil)
+	}
+
+	validationErrors := utils.ValidateStruct(req)
+	if validationErrors != nil {
+		return utils.ErrorResponseJSON(c, fiber.StatusBadRequest, "Validation failed", validationErrors)
+	}
+
+	updaterID, err := primitive.ObjectIDFromHex(c.Locals("userID").(string))
+	if err != nil {
+		return utils.ErrorResponseJSON(c, fiber.StatusInternalServerError, "Invalid user ID", nil)
+	}
+
+	err = h.appointmentService.UpdateStatus(c.Context(), id, req.Status, updaterID)
+	if err != nil {
+		log.Printf("Error updating appointment status: %v", err)
+		return utils.ErrorResponseJSON(c, fiber.StatusInternalServerError, err.Error(), nil)
+	}
+
+	return utils.ResponseJSON(c, fiber.StatusNoContent, "Appointment status updated successfully", nil)
 }

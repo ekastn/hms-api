@@ -46,6 +46,7 @@ func (p PatientDTO) ToEntity() PatientEntity {
 		Age:       p.Age,
 		Gender:    p.Gender,
 		Phone:     p.Phone,
+        Email:     p.Email,
 		Address:   p.Address,
 		LastVisit: p.LastVisit,
 	}
@@ -58,6 +59,7 @@ func (p PatientEntity) ToDTO() PatientDTO {
 		Age:       p.Age,
 		Gender:    p.Gender,
 		Phone:     p.Phone,
+        Email:     p.Email,
 		Address:   p.Address,
 		LastVisit: p.LastVisit,
 	}

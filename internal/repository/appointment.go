@@ -85,11 +85,11 @@ func (r *AppointmentRepository) GetUpcomingAppointments(ctx context.Context, lim
 	pipeline := []bson.M{
 		{
 			"$match": bson.M{
-				"date": bson.M{
+				"dateTime": bson.M{
 					"$gte": now,
 					"$lte": end,
 				},
-				"status": bson.M{"$in": []string{"scheduled", "confirmed"}},
+				"status": bson.M{"$in": []string{"Scheduled", "Confirmed"}},
 			},
 		},
 		{"$sort": bson.M{"date": 1}},
@@ -97,7 +97,7 @@ func (r *AppointmentRepository) GetUpcomingAppointments(ctx context.Context, lim
 		{
 			"$lookup": bson.M{
 				"from":         "patients",
-				"localField":   "patient_id",
+				"localField":   "patientId",
 				"foreignField": "_id",
 				"as":           "patient",
 			},
@@ -106,7 +106,7 @@ func (r *AppointmentRepository) GetUpcomingAppointments(ctx context.Context, lim
 		{
 			"$lookup": bson.M{
 				"from":         "doctors",
-				"localField":   "doctor_id",
+				"localField":   "doctorId",
 				"foreignField": "_id",
 				"as":           "doctor",
 			},
@@ -117,7 +117,7 @@ func (r *AppointmentRepository) GetUpcomingAppointments(ctx context.Context, lim
 				"_id":         1,
 				"patientName": "$patient.name",
 				"doctorName":  "$doctor.name",
-				"date":        1,
+				"dateTime":    1,
 				"status":      1,
 			},
 		},

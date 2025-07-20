@@ -111,7 +111,7 @@ func (s *DashboardService) GetDashboardData(ctx context.Context) (*domain.Dashbo
 	}
 
 	// Get recent activities (last 10 activities)
-	recentActivities, err := s.activityRepo.GetRecent(ctx, 10)
+	recentActivities, err := s.activityRepo.GetRecent(ctx, 5)
 	if err != nil {
 		return nil, err
 	}

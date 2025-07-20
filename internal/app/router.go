@@ -58,6 +58,7 @@ func (a *App) setupRoutes() {
 	dashboardHandler := handlers.NewDashboardHandler(dashboardService)
 	authHandler := handlers.NewAuthHandler(authService)
 	userHandler := handlers.NewUserHandler(userService)
+	activityHandler := handlers.NewActivityHandler(activityService)
 
 	api := a.f.Group("/api")
 
@@ -112,6 +113,9 @@ func (a *App) setupRoutes() {
 	records.Post("/", RBACMiddleware(domain.RoleAdmin, domain.RoleDoctor), medicalRecordHandler.Create)
 	records.Put("/:id", RBACMiddleware(domain.RoleAdmin, domain.RoleDoctor), medicalRecordHandler.Update)
 	records.Delete("/:id", RBACMiddleware(domain.RoleAdmin), medicalRecordHandler.Delete)
+
+	activities := api.Group("/activities", jwt, RBACMiddleware(domain.RoleAdmin, domain.RoleManagement))
+	activities.Get("/", activityHandler.HandleGetAllActivities)
 
 	api.Get("/docs/*", swagger.HandlerDefault)
 

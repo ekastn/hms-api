@@ -37,3 +37,26 @@ func (r *ActivityRepository) GetRecent(ctx context.Context, limit int) ([]*domai
 
 	return activities, nil
 }
+
+func (r *ActivityRepository) GetAll(ctx context.Context) ([]*domain.ActivityEntity, error) {
+	cur, err := r.coll.Find(ctx, bson.D{})
+	if err != nil {
+		return nil, err
+	}
+	defer cur.Close(ctx)
+
+	var activities []*domain.ActivityEntity
+	for cur.Next(ctx) {
+		var activity domain.ActivityEntity
+		if err := cur.Decode(&activity); err != nil {
+			return nil, err
+		}
+		activities = append(activities, &activity)
+	}
+
+	if err := cur.Err(); err != nil {
+		return nil, err
+	}
+
+	return activities, nil
+}

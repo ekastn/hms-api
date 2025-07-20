@@ -33,10 +33,11 @@ type UserEntity struct {
 
 // UserDTO is a safe data transfer object for user info (without the password).
 type UserDTO struct {
-	ID    string `json:"id"`
-	Name  string `json:"name"`
-	Email string `json:"email"`
-	Role  Role   `json:"role"`
+	ID       string `json:"id"`
+	Name     string `json:"name"`
+	Email    string `json:"email"`
+	Role     Role   `json:"role"`
+	IsActive bool   `json:"isActive"`
 }
 
 // LoginRequest defines the structure for a login request.
@@ -65,9 +66,36 @@ type CreateUserRequest struct {
 type UpdateUserRequest struct {
 	Name     string `json:"name,omitempty" validate:"min=3,max=100" example:"Jane Doe"`
 	Email    string `json:"email,omitempty" validate:"email" example:"jane.doe@example.com"`
-	Password string `json:"password,omitempty" validate:"min=8" example:"NewStrongPassword123"`
 	Role     Role   `json:"role,omitempty" validate:"oneof=Admin Doctor Nurse Receptionist Management" example:"Receptionist"`
 	IsActive *bool  `json:"isActive,omitempty" example:true`
+}
+
+// @Description	Request body for changing user password
+// @swagger:model
+type ChangePasswordRequest struct {
+	NewPassword     string `json:"newPassword" validate:"required,min=8" example:"VeryStrongNewPassword123"`
+	ConfirmPassword string `json:"confirmPassword" validate:"required,eqfield=NewPassword" example:"VeryStrongNewPassword123"`
+}
+
+func (u *UserEntity) ToDTO() *UserDTO {
+    return &UserDTO{
+        ID:       u.ID.Hex(),
+        Name:     u.Name,
+        Email:    u.Email,
+        Role:     u.Role,
+        IsActive: u.IsActive,
+    }
+}
+
+func (u *UserDTO) ToEntity() *UserEntity {
+	id, _ := primitive.ObjectIDFromHex(u.ID)
+    return &UserEntity{
+        ID:       id,
+        Name:     u.Name,
+        Email:    u.Email,
+        Role:     u.Role,
+        IsActive: u.IsActive,
+    }
 }
 
 func (req *CreateUserRequest) ToEntity() *UserEntity {
@@ -86,9 +114,6 @@ func (req *UpdateUserRequest) ToEntity(existing *UserEntity) *UserEntity {
 	}
 	if req.Email != "" {
 		existing.Email = req.Email
-	}
-	if req.Password != "" {
-		existing.Password = req.Password
 	}
 	if req.Role != "" {
 		existing.Role = req.Role

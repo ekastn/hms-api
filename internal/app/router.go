@@ -75,6 +75,7 @@ func (a *App) setupRoutes() {
 	users.Get("/:id", userHandler.HandleGetUserByID)
 	users.Put("/:id", userHandler.HandleUpdateUser)
 	users.Delete("/:id", userHandler.HandleDeactivateUser)
+	users.Put("/:id/password", userHandler.HandleChangePassword)
 
 	// Dashboard routes
 	dashboard := api.Group("/dashboard", jwt, RBACMiddleware(domain.RoleAdmin, domain.RoleManagement))

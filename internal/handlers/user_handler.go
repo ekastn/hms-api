@@ -147,3 +147,36 @@ func (h *UserHandler) HandleDeactivateUser(c *fiber.Ctx) error {
 
 	return utils.ResponseJSON(c, fiber.StatusNoContent, "User deactivated successfully", nil)
 }
+
+// HandleChangePassword handles the request to change a user's password.
+//
+//	@Summary		Change user password
+//	@Description	Change the password for a specific user. Admin access required.
+//	@Tags			Users
+//	@Accept			json
+//	@Produce		json
+//	@Security		ApiKeyAuth
+//	@Param			id		path		string					true	"User ID"
+//	@Param			password	body		domain.ChangePasswordRequest	true	"New password details"
+//	@Success		204		{object}	utils.SuccessResponse	"Password changed successfully"
+//	@Failure		400		{object}	utils.ErrorResponse			"Invalid request body or validation failed"
+//	@Failure		500		{object}	utils.ErrorResponse			"Failed to change password"
+//	@Router			/users/{id}/password [put]
+func (h *UserHandler) HandleChangePassword(c *fiber.Ctx) error {
+	id := c.Params("id")
+	var req domain.ChangePasswordRequest
+	if err := c.BodyParser(&req); err != nil {
+		return utils.ErrorResponseJSON(c, fiber.StatusBadRequest, "Invalid request body", nil)
+	}
+
+	validationErrors := utils.ValidateStruct(req)
+	if validationErrors != nil {
+		return utils.ErrorResponseJSON(c, fiber.StatusBadRequest, "Validation failed", validationErrors)
+	}
+
+	if err := h.userService.ChangeUserPassword(c.Context(), id, req.NewPassword); err != nil {
+		return utils.ErrorResponseJSON(c, fiber.StatusInternalServerError, "Failed to change password", err.Error())
+	}
+
+	return utils.ResponseJSON(c, fiber.StatusNoContent, "Password changed successfully", nil)
+}

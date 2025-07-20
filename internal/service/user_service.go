@@ -29,12 +29,7 @@ func (s *UserService) GetAllUsers(ctx context.Context) ([]*domain.UserDTO, error
 
 	var userDTOs []*domain.UserDTO
 	for _, user := range users {
-		userDTOs = append(userDTOs, &domain.UserDTO{
-			ID:    user.ID.Hex(),
-			Name:  user.Name,
-			Email: user.Email,
-			Role:  user.Role,
-		})
+		userDTOs = append(userDTOs, user.ToDTO())
 	}
 	return userDTOs, nil
 }
@@ -54,12 +49,7 @@ func (s *UserService) GetUserByID(ctx context.Context, id string) (*domain.UserD
 		return nil, nil // Not found
 	}
 
-	return &domain.UserDTO{
-		ID:    user.ID.Hex(),
-		Name:  user.Name,
-		Email: user.Email,
-		Role:  user.Role,
-	}, nil
+    return user.ToDTO(), nil
 }
 
 // UpdateUser updates a user's details (e.g., name, role).
@@ -79,15 +69,31 @@ func (s *UserService) UpdateUser(ctx context.Context, id string, req *domain.Upd
 
 	updatedUser := req.ToEntity(existingUser)
 
-	if req.Password != "" {
-		hashedPassword, err := utils.HashPassword(req.Password)
-		if err != nil {
-			return err
-		}
-		updatedUser.Password = string(hashedPassword)
+	return s.userRepo.Update(ctx, objID, updatedUser)
+}
+
+// ChangeUserPassword updates a user's password.
+func (s *UserService) ChangeUserPassword(ctx context.Context, id string, newPassword string) error {
+	objID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return err
 	}
 
-	return s.userRepo.Update(ctx, objID, updatedUser)
+	existingUser, err := s.userRepo.GetByID(ctx, objID)
+	if err != nil {
+		return err
+	}
+	if existingUser == nil {
+		return errors.New("user not found")
+	}
+
+	hashedPassword, err := utils.HashPassword(newPassword)
+	if err != nil {
+		return err
+	}
+	existingUser.Password = string(hashedPassword)
+
+	return s.userRepo.Update(ctx, objID, existingUser)
 }
 
 // DeactivateUser marks a user as inactive.

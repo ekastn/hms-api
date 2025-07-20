@@ -56,7 +56,7 @@ func (r *UserRepository) GetByID(ctx context.Context, id primitive.ObjectID) (*d
 }
 
 func (r *UserRepository) GetAll(ctx context.Context) ([]*domain.UserEntity, error) {
-	cur, err := r.coll.Find(ctx, bson.M{"isActive": true})
+	cur, err := r.coll.Find(ctx, bson.M{})
 	if err != nil {
 		return nil, err
 	}

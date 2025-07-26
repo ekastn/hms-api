@@ -192,20 +192,23 @@ func (s *Seed) seedPatients(ctx context.Context, creatorID string) ([]*domain.Pa
 func (s *Seed) seedAppointments(ctx context.Context, creatorID string, doctors []*domain.DoctorEntity, patients []*domain.PatientEntity) ([]*domain.AppointmentEntity, error) {
 	creatorObjID, _ := primitive.ObjectIDFromHex(creatorID)
 	var createdAppointments []*domain.AppointmentEntity
-	appointmentTypes := []domain.AppointmentType{domain.AppointmentTypeCheckUp, domain.AppointmentTypeConsultation, domain.AppointmentTypeFollowUp}
-	statuses := []domain.AppointmentStatus{domain.AppointmentStatusScheduled, domain.AppointmentStatusConfirmed, domain.AppointmentStatusCompleted}
+	appointmentTypes := []domain.AppointmentType{
+		domain.AppointmentTypeCheckUp,
+		domain.AppointmentTypeConsultation,
+		domain.AppointmentTypeFollowUp,
+	}
 	rand.Seed(time.Now().UnixNano())
 
 	for i := 0; i < 20; i++ {
 		patient := patients[rand.Intn(len(patients))]
 		doctor := doctors[rand.Intn(len(doctors))]
-		appointment := &domain.AppointmentEntity{
-			PatientID: patient.ID,
-			DoctorID:  doctor.ID,
+
+		appointment := &domain.CreateAppointmentRequest{
+			PatientID: patient.ID.Hex(),
+			DoctorID:  doctor.ID.Hex(),
 			Type:      appointmentTypes[rand.Intn(len(appointmentTypes))],
-			DateTime:  time.Now().AddDate(0, 0, rand.Intn(60)-30), // Appointments in the past and future
+			DateTime:  time.Now().AddDate(0, 0, rand.Intn(60)-30),
 			Duration:  30,
-			Status:    statuses[rand.Intn(len(statuses))],
 			Location:  fmt.Sprintf("Ruang %d", 101+rand.Intn(10)),
 			Notes:     "Pemeriksaan rutin.",
 		}
@@ -215,23 +218,25 @@ func (s *Seed) seedAppointments(ctx context.Context, creatorID string, doctors [
 			log.Printf("Could not create appointment for patient %s: %v. Skipping.", patient.Name, err)
 			continue
 		}
+
+		log.Printf("Created appointment with ID: %s", id)
+
 		newAppt, err := s.appointmentService.GetByID(ctx, id)
 		if err != nil {
-			return nil, fmt.Errorf("failed to retrieve created appointment: %w", err)
+			log.Printf("Failed to retrieve created appointment: %v. Skipping.", err)
+			continue
 		}
+
 		createdAppointments = append(createdAppointments, newAppt)
 	}
+
 	return createdAppointments, nil
 }
 
 func (s *Seed) seedMedicalRecords(ctx context.Context, creatorID string, doctors []*domain.DoctorEntity, appointments []*domain.AppointmentEntity) ([]*domain.MedicalRecordEntity, error) {
 	creatorObjID, _ := primitive.ObjectIDFromHex(creatorID)
 	var createdRecords []*domain.MedicalRecordEntity
-	recordTypes := []domain.MedicalRecordType{domain.RecordTypeCheckUp, domain.RecordTypeFollowUp}
 	rand.Seed(time.Now().UnixNano())
-
-	diagnoses := []string{"Hipertensi", "Diabetes Mellitus", "Infeksi Saluran Pernapasan Akut", "Demam Berdarah Dengue", "Tifoid"}
-	treatments := []string{"Pemberian obat A", "Pemberian obat B", "Istirahat cukup", "Fisioterapi", "Diet rendah garam"}
 
 	for _, appt := range appointments {
 		if appt.Status != domain.AppointmentStatusCompleted {
@@ -242,10 +247,10 @@ func (s *Seed) seedMedicalRecords(ctx context.Context, creatorID string, doctors
 			PatientID:   appt.PatientID,
 			DoctorID:    appt.DoctorID,
 			Date:        appt.DateTime,
-			RecordType:  recordTypes[rand.Intn(len(recordTypes))],
+			RecordType:  domain.RecordTypeCheckUp,
 			Description: "Pasien datang dengan keluhan...",
-			Diagnosis:   diagnoses[rand.Intn(len(diagnoses))],
-			Treatment:   treatments[rand.Intn(len(treatments))],
+			Diagnosis:   "Hipertensi",
+			Treatment:   "Pemberian obat A",
 			Notes:       "Kontrol kembali 1 minggu lagi.",
 			CreatedBy:   creatorObjID,
 		}
@@ -255,11 +260,90 @@ func (s *Seed) seedMedicalRecords(ctx context.Context, creatorID string, doctors
 			log.Printf("Could not create medical record for patient %s: %v. Skipping.", appt.PatientID.Hex(), err)
 			continue
 		}
+
 		newRecord, err := s.medicalRecordService.GetByID(ctx, id)
 		if err != nil {
-			return nil, fmt.Errorf("failed to retrieve created medical record: %w", err)
+			log.Printf("Failed to retrieve medical record: %v. Skipping.", err)
+			continue
 		}
+
 		createdRecords = append(createdRecords, newRecord)
 	}
+
+	// Tambahkan 5 medical record manual
+	if len(appointments) >= 10 {
+		manualRecords := []domain.MedicalRecordEntity{
+			{
+				PatientID:   appointments[5].PatientID,
+				DoctorID:    appointments[5].DoctorID,
+				Date:        time.Now().Add(-96 * time.Hour),
+				RecordType:  domain.RecordTypeCheckUp,
+				Description: "Pasien mengeluh nyeri dada ringan",
+				Diagnosis:   "Asam lambung",
+				Treatment:   "Obat antasida dan diet rendah asam",
+				Notes:       "Hindari makanan pedas dan asam",
+				CreatedBy:   creatorObjID,
+			},
+			{
+				PatientID:   appointments[6].PatientID,
+				DoctorID:    appointments[6].DoctorID,
+				Date:        time.Now().Add(-72 * time.Hour),
+				RecordType:  domain.RecordTypeFollowUp,
+				Description: "Pemeriksaan lanjutan pasca operasi ringan",
+				Diagnosis:   "Pemulihan baik",
+				Treatment:   "Saran latihan ringan dan kontrol ulang",
+				Notes:       "Kembali untuk cek luka 5 hari lagi",
+				CreatedBy:   creatorObjID,
+			},
+			{
+				PatientID:   appointments[7].PatientID,
+				DoctorID:    appointments[7].DoctorID,
+				Date:        time.Now().Add(-48 * time.Hour),
+				RecordType:  domain.RecordTypeCheckUp,
+				Description: "Pemeriksaan luka ringan karena jatuh",
+				Diagnosis:   "Luka lecet",
+				Treatment:   "Pembersihan luka dan salep antibiotik",
+				Notes:       "Ganti perban tiap hari",
+				CreatedBy:   creatorObjID,
+			},
+			{
+				PatientID:   appointments[8].PatientID,
+				DoctorID:    appointments[8].DoctorID,
+				Date:        time.Now().Add(-24 * time.Hour),
+				RecordType:  domain.RecordTypeCheckUp,
+				Description: "Pasien mengalami batuk 3 hari",
+				Diagnosis:   "Infeksi Saluran Pernapasan Atas",
+				Treatment:   "Obat batuk dan istirahat",
+				Notes:       "Kontrol ulang jika tidak membaik dalam 3 hari",
+				CreatedBy:   creatorObjID,
+			},
+			{
+				PatientID:   appointments[9].PatientID,
+				DoctorID:    appointments[9].DoctorID,
+				Date:        time.Now(),
+				RecordType:  domain.RecordTypeFollowUp,
+				Description: "Follow-up terapi hipertensi",
+				Diagnosis:   "Hipertensi terkendali",
+				Treatment:   "Lanjutkan obat dan jaga pola makan",
+				Notes:       "Cek tekanan darah mingguan",
+				CreatedBy:   creatorObjID,
+			},
+		}
+
+		for _, record := range manualRecords {
+			id, err := s.medicalRecordService.Create(ctx, &record)
+			if err != nil {
+				log.Printf("Manual record failed: %v", err)
+				continue
+			}
+			newRecord, err := s.medicalRecordService.GetByID(ctx, id)
+			if err != nil {
+				log.Printf("Failed to retrieve manual record: %v", err)
+				continue
+			}
+			createdRecords = append(createdRecords, newRecord)
+		}
+	}
+
 	return createdRecords, nil
 }
